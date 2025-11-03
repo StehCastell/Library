@@ -1,0 +1,143 @@
+﻿@model List<LibraryWeb.Models.Book>
+
+@{
+    ViewData["Title"] = "My Books";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Library System</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>📚 My Personal Library</h1>
+
+        <div class="user-info">
+            <h3>Welcome, @ViewBag.UserName!</h3>
+            <div class="user-actions">
+                <div class="theme-toggle">
+                    <label for="themeSelector">🌓 Theme:</label>
+                    <select id="themeSelector" onchange="changeTheme()">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <form action="@Url.Action("Logout", "Account")" method="post" style="margin: 0;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-secondary btn-logout">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="bookMessage"></div>
+
+        <h2 id="formTitle">Add Book</h2>
+        <form id="formBook">
+            <input type="hidden" id="editBookId">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookTitle">Title:</label>
+                    <input type="text" id="bookTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookAuthor">Author:</label>
+                    <input type="text" id="bookAuthor" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookGenre">Genre:</label>
+                    <input type="text" id="bookGenre" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookPages">Number of Pages:</label>
+                    <input type="number" id="bookPages" min="1" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookType">Type:</label>
+                    <select id="bookType" required>
+                        <option value="">Select...</option>
+                        <option value="physical">Physical</option>
+                        <option value="digital">Digital</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bookStatus">Reading Status:</label>
+                    <select id="bookStatus" required>
+                        <option value="">Select...</option>
+                        <option value="not-read">Not Read</option>
+                        <option value="reading">Reading</option>
+                        <option value="read">Read</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmitBook" class="btn-primary">Add Book</button>
+            <button type="button" id="btnCancelEdit" class="btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
+        </form>
+
+        <h2 style="margin-top: 40px;">My Books</h2>
+        <div id="booksTableContainer">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="empty-state">
+                    <p style="font-size: 48px;">📚</p>
+                    <p>No books registered yet.</p>
+                    <p>Add your first book!</p>
+                </div>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Genre</th>
+                            <th>Pages</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="booksTableBody">
+                        @foreach (var book in Model)
+                        {
+                            var statusClass = book.Status == "read" ? "status-read" :
+                            book.Status == "reading" ? "status-reading" : "status-not-read";
+                            var statusText = book.Status == "read" ? "Read" :
+                            book.Status == "reading" ? "Reading" : "Not Read";
+                            var typeClass = book.Type == "physical" ? "type-physical" : "type-digital";
+                            var typeText = book.Type == "physical" ? "Physical" : "Digital";
+                            <tr data-id="@book.Id">
+                                <td><strong>@book.Title</strong></td>
+                                <td>@book.Author</td>
+                                <td>@book.Genre</td>
+                                <td>@book.Pages</td>
+                                <td><span class="type-badge @typeClass">@typeText</span></td>
+                                <td><span class="status-badge @statusClass">@statusText</span></td>
+                                <td class="actions">
+                                    <button class="btn-edit" onclick="editBook(@book.Id)">Edit</button>
+                                    <button class="btn-danger" onclick="deleteBook(@book.Id)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <script src="~/js/books.js"></script>
+</body>
+</html>
