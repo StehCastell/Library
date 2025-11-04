@@ -354,3 +354,6 @@ MigrationBackup/
 
 # .visual studio folder
 .vs/
+
+#claude.ai
+.claude/

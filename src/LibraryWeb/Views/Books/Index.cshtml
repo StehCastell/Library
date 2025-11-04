@@ -12,131 +12,270 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Library System</title>
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
-<body>
-    <div class="container">
-        <h1>📚 My Personal Library</h1>
-
-        <div class="user-info">
-            <h3>Welcome, @ViewBag.UserName!</h3>
-            <div class="user-actions">
-                <div class="theme-toggle">
-                    <label for="themeSelector">🌓 Theme:</label>
-                    <select id="themeSelector" onchange="changeTheme()">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
-                <form action="@Url.Action("Logout", "Account")" method="post" style="margin: 0;">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn-secondary btn-logout">Logout</button>
-                </form>
+<body class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-book"></i>
+                <span>Library</span>
             </div>
         </div>
 
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-books">
+                <i class="fas fa-book"></i>
+                <span>All Books</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-add-book">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Book</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistics</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <p class="user-name">@ViewBag.UserName</p>
+                    <p class="user-role">Book Lover</p>
+                </div>
+            </div>
+            <form action="@Url.Action("Logout", "Account")" method="post" class="logout-form">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-logout-sidebar" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Hello, @ViewBag.UserName! 👋</h1>
+                <p class="header-subtitle">Welcome back to your personal library</p>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search books..." />
+                </div>
+                <button class="theme-toggle-btn" onclick="changeTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Total Books</p>
+                    <h2 class="stat-value" id="totalBooks">@(Model?.Count ?? 0)</h2>
+                    <p class="stat-change positive">In your collection</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Completed</p>
+                    <h2 class="stat-value" id="booksRead">@(Model?.Count(b => b.Status == "read") ?? 0)</h2>
+                    <p class="stat-change positive">Books finished</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">In Progress</p>
+                    <h2 class="stat-value" id="booksReading">@(Model?.Count(b => b.Status == "reading") ?? 0)</h2>
+                    <p class="stat-change">Currently reading</p>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-danger">
+                <div class="stat-icon">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label">Want to Read</p>
+                    <h2 class="stat-value" id="booksNotRead">@(Model?.Count(b => b.Status == "not-read") ?? 0)</h2>
+                    <p class="stat-change">On your list</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Display -->
         <div id="bookMessage"></div>
 
-        <h2 id="formTitle">Add Book</h2>
-        <form id="formBook">
-            <input type="hidden" id="editBookId">
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="bookTitle">Title:</label>
-                    <input type="text" id="bookTitle" required>
-                </div>
-                <div class="form-group">
-                    <label for="bookAuthor">Author:</label>
-                    <input type="text" id="bookAuthor" required>
-                </div>
+        <!-- Add/Edit Book Form (Hidden by default) -->
+        <div id="bookFormSection" class="content-section hidden">
+            <div class="section-header">
+                <h2 id="formTitle">Add New Book</h2>
+                <button type="button" class="btn-close" onclick="hideBookForm()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="bookGenre">Genre:</label>
-                    <input type="text" id="bookGenre" required>
-                </div>
-                <div class="form-group">
-                    <label for="bookPages">Number of Pages:</label>
-                    <input type="number" id="bookPages" min="1" required>
-                </div>
-            </div>
+            <form id="formBook" class="modern-form">
+                <input type="hidden" id="editBookId">
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="bookType">Type:</label>
-                    <select id="bookType" required>
-                        <option value="">Select...</option>
-                        <option value="physical">Physical</option>
-                        <option value="digital">Digital</option>
-                    </select>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bookTitle">
+                            <i class="fas fa-heading"></i> Book Title
+                        </label>
+                        <input type="text" id="bookTitle" required placeholder="e.g., The Great Gatsby">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookAuthor">
+                            <i class="fas fa-user-edit"></i> Author
+                        </label>
+                        <input type="text" id="bookAuthor" required placeholder="e.g., F. Scott Fitzgerald">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookGenre">
+                            <i class="fas fa-tag"></i> Genre
+                        </label>
+                        <input type="text" id="bookGenre" required placeholder="e.g., Fiction, Mystery, Romance">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookPages">
+                            <i class="fas fa-file-alt"></i> Number of Pages
+                        </label>
+                        <input type="number" id="bookPages" min="1" required placeholder="e.g., 320">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookType">
+                            <i class="fas fa-layer-group"></i> Format
+                        </label>
+                        <select id="bookType" required>
+                            <option value="">Select format...</option>
+                            <option value="physical">Physical Book</option>
+                            <option value="digital">E-Book / Digital</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookStatus">
+                            <i class="fas fa-tasks"></i> Reading Status
+                        </label>
+                        <select id="bookStatus" required>
+                            <option value="">Select status...</option>
+                            <option value="not-read">Want to Read</option>
+                            <option value="reading">Currently Reading</option>
+                            <option value="read">Finished</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="bookStatus">Reading Status:</label>
-                    <select id="bookStatus" required>
-                        <option value="">Select...</option>
-                        <option value="not-read">Not Read</option>
-                        <option value="reading">Reading</option>
-                        <option value="read">Read</option>
-                    </select>
-                </div>
-            </div>
 
-            <button type="submit" id="btnSubmitBook" class="btn-primary">Add Book</button>
-            <button type="button" id="btnCancelEdit" class="btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
-        </form>
-
-        <h2 style="margin-top: 40px;">My Books</h2>
-        <div id="booksTableContainer">
-            @if (Model == null || Model.Count == 0)
-            {
-                <div class="empty-state">
-                    <p style="font-size: 48px;">📚</p>
-                    <p>No books registered yet.</p>
-                    <p>Add your first book!</p>
+                <div class="form-actions">
+                    <button type="submit" id="btnSubmitBook" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Book
+                    </button>
+                    <button type="button" id="btnCancelEdit" class="btn-secondary" onclick="cancelEdit()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
-            }
-            else
-            {
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Genre</th>
-                            <th>Pages</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="booksTableBody">
-                        @foreach (var book in Model)
-                        {
-                            var statusClass = book.Status == "read" ? "status-read" :
-                            book.Status == "reading" ? "status-reading" : "status-not-read";
-                            var statusText = book.Status == "read" ? "Read" :
-                            book.Status == "reading" ? "Reading" : "Not Read";
-                            var typeClass = book.Type == "physical" ? "type-physical" : "type-digital";
-                            var typeText = book.Type == "physical" ? "Physical" : "Digital";
-                            <tr data-id="@book.Id">
-                                <td><strong>@book.Title</strong></td>
-                                <td>@book.Author</td>
-                                <td>@book.Genre</td>
-                                <td>@book.Pages</td>
-                                <td><span class="type-badge @typeClass">@typeText</span></td>
-                                <td><span class="status-badge @statusClass">@statusText</span></td>
-                                <td class="actions">
-                                    <button class="btn-edit" onclick="editBook(@book.Id)">Edit</button>
-                                    <button class="btn-danger" onclick="deleteBook(@book.Id)">Delete</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
+            </form>
         </div>
-    </div>
+
+        <!-- Books Table -->
+        <div id="booksTableSection" class="content-section">
+            <div class="section-header">
+                <div>
+                    <h2>My Book Collection</h2>
+                    <p class="section-subtitle">Browse and manage all your books</p>
+                </div>
+                <button class="btn-add" onclick="showBookForm()">
+                    <i class="fas fa-plus"></i> Add Book
+                </button>
+            </div>
+
+            <div id="booksTableContainer" class="table-container">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-book empty-icon"></i>
+                        <h3>Your library is empty</h3>
+                        <p>Start building your collection by adding your first book!</p>
+                        <button class="btn-primary" onclick="showBookForm()">
+                            <i class="fas fa-plus"></i> Add Your First Book
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>TITLE</th>
+                                <th>AUTHOR</th>
+                                <th>GENRE</th>
+                                <th>PAGES</th>
+                                <th>FORMAT</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody">
+                            @foreach (var book in Model)
+                            {
+                                var statusClass = book.Status == "read" ? "status-read" :
+                                book.Status == "reading" ? "status-reading" : "status-not-read";
+                                var statusText = book.Status == "read" ? "Finished" :
+                                book.Status == "reading" ? "Reading" : "Want to Read";
+                                var typeClass = book.Type == "physical" ? "type-physical" : "type-digital";
+                                var typeText = book.Type == "physical" ? "Physical" : "E-Book";
+                                <tr data-id="@book.Id">
+                                    <td class="book-title">@book.Title</td>
+                                    <td>@book.Author</td>
+                                    <td>@book.Genre</td>
+                                    <td>@book.Pages</td>
+                                    <td><span class="badge badge-type @typeClass">@typeText</span></td>
+                                    <td><span class="badge badge-status @statusClass">@statusText</span></td>
+                                    <td class="actions">
+                                        <button class="btn-icon btn-icon-edit" onclick="editBook(@book.Id)" title="Edit book">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon btn-icon-delete" onclick="deleteBook(@book.Id)" title="Delete book">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </main>
 
     <script src="~/js/books.js"></script>
 </body>
