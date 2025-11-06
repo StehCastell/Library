@@ -4,6 +4,7 @@ using LibraryAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryAPI.Migrations
 {
     [DbContext(typeof(LibraryContext))]
-    partial class BibliotecaContextModelSnapshot : ModelSnapshot
+    [Migration("20251105012656_AddAuthorsAndCollections")]
+    partial class AddAuthorsAndCollections
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,33 +195,6 @@ namespace LibraryAPI.Migrations
                     b.ToTable("collections");
                 });
 
-            modelBuilder.Entity("LibraryAPI.Models.CollectionAuthor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AuthorId")
-                        .HasColumnType("int")
-                        .HasColumnName("author_id");
-
-                    b.Property<int>("CollectionId")
-                        .HasColumnType("int")
-                        .HasColumnName("collection_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorId");
-
-                    b.HasIndex("CollectionId", "AuthorId")
-                        .IsUnique();
-
-                    b.ToTable("collection_authors");
-                });
-
             modelBuilder.Entity("LibraryAPI.Models.CollectionBook", b =>
                 {
                     b.Property<int>("Id")
@@ -330,25 +306,6 @@ namespace LibraryAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LibraryAPI.Models.CollectionAuthor", b =>
-                {
-                    b.HasOne("LibraryAPI.Models.Author", "Author")
-                        .WithMany("CollectionAuthors")
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LibraryAPI.Models.Collection", "Collection")
-                        .WithMany("CollectionAuthors")
-                        .HasForeignKey("CollectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Author");
-
-                    b.Navigation("Collection");
-                });
-
             modelBuilder.Entity("LibraryAPI.Models.CollectionBook", b =>
                 {
                     b.HasOne("LibraryAPI.Models.Book", "Book")
@@ -371,8 +328,6 @@ namespace LibraryAPI.Migrations
             modelBuilder.Entity("LibraryAPI.Models.Author", b =>
                 {
                     b.Navigation("BookAuthors");
-
-                    b.Navigation("CollectionAuthors");
                 });
 
             modelBuilder.Entity("LibraryAPI.Models.Book", b =>
@@ -384,8 +339,6 @@ namespace LibraryAPI.Migrations
 
             modelBuilder.Entity("LibraryAPI.Models.Collection", b =>
                 {
-                    b.Navigation("CollectionAuthors");
-
                     b.Navigation("CollectionBooks");
                 });
 

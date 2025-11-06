@@ -32,23 +32,61 @@ function applyTheme(theme) {
     }
 }
 
+// ===== SIDEBAR TOGGLE =====
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('mobile-visible');
+        overlay.classList.toggle('active');
+    }
+}
+
 // ===== NAVIGATION =====
 function initializeNavigation() {
     const navBooks = document.getElementById('nav-books');
-    const navAddBook = document.getElementById('nav-add-book');
+    const navAuthors = document.getElementById('nav-authors');
+    const navCollections = document.getElementById('nav-collections');
+    const navStatistics = document.getElementById('nav-statistics');
+    const navSettings = document.getElementById('nav-settings');
 
     if (navBooks) {
         navBooks.addEventListener('click', function(e) {
             e.preventDefault();
-            showBooksTable();
+            showSection('books');
             setActiveNav(this);
         });
     }
 
-    if (navAddBook) {
-        navAddBook.addEventListener('click', function(e) {
+    if (navAuthors) {
+        navAuthors.addEventListener('click', function(e) {
             e.preventDefault();
-            showBookForm();
+            showSection('authors');
+            setActiveNav(this);
+        });
+    }
+
+    if (navCollections) {
+        navCollections.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSection('collections');
+            setActiveNav(this);
+        });
+    }
+
+    if (navStatistics) {
+        navStatistics.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSection('statistics');
+            setActiveNav(this);
+        });
+    }
+
+    if (navSettings) {
+        navSettings.addEventListener('click', function(e) {
+            e.preventDefault();
+            showSection('settings');
             setActiveNav(this);
         });
     }
@@ -60,6 +98,39 @@ function setActiveNav(activeItem) {
     });
     if (activeItem) {
         activeItem.classList.add('active');
+    }
+}
+
+function showSection(sectionName) {
+    // Hide all sections
+    document.getElementById('bookFormSection')?.classList.add('hidden');
+    document.getElementById('booksTableSection')?.classList.add('hidden');
+    document.getElementById('authorFormSection')?.classList.add('hidden');
+    document.getElementById('authorsSection')?.classList.add('hidden');
+    document.getElementById('collectionFormSection')?.classList.add('hidden');
+    document.getElementById('collectionsSection')?.classList.add('hidden');
+    document.getElementById('statisticsSection')?.classList.add('hidden');
+    document.getElementById('settingsSection')?.classList.add('hidden');
+
+    // Show requested section and load data
+    switch(sectionName) {
+        case 'books':
+            document.getElementById('booksTableSection')?.classList.remove('hidden');
+            break;
+        case 'authors':
+            document.getElementById('authorsSection')?.classList.remove('hidden');
+            loadAuthors();
+            break;
+        case 'collections':
+            document.getElementById('collectionsSection')?.classList.remove('hidden');
+            loadCollections();
+            break;
+        case 'statistics':
+            document.getElementById('statisticsSection')?.classList.remove('hidden');
+            break;
+        case 'settings':
+            document.getElementById('settingsSection')?.classList.remove('hidden');
+            break;
     }
 }
 
@@ -137,6 +208,7 @@ function updateStats() {
 
 // ===== FORM MANAGEMENT =====
 function showBookForm() {
+    showSection('books');
     const formSection = document.getElementById('bookFormSection');
     const tableSection = document.getElementById('booksTableSection');
 
@@ -144,6 +216,10 @@ function showBookForm() {
         formSection.classList.remove('hidden');
         tableSection.classList.add('hidden');
     }
+
+    // Set active nav
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.getElementById('nav-books')?.classList.add('active');
 }
 
 function hideBookForm() {
@@ -159,12 +235,447 @@ function hideBookForm() {
 }
 
 function showBooksTable() {
-    const formSection = document.getElementById('bookFormSection');
-    const tableSection = document.getElementById('booksTableSection');
+    showSection('books');
+}
+
+// ===== AUTHORS SECTION =====
+
+function showAuthorForm() {
+    showSection('authors');
+    const formSection = document.getElementById('authorFormSection');
+    const tableSection = document.getElementById('authorsSection');
+
+    if (formSection && tableSection) {
+        formSection.classList.remove('hidden');
+        tableSection.classList.add('hidden');
+    }
+
+    // Set active nav
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.getElementById('nav-authors')?.classList.add('active');
+}
+
+function hideAuthorForm() {
+    const formSection = document.getElementById('authorFormSection');
+    const tableSection = document.getElementById('authorsSection');
 
     if (formSection && tableSection) {
         formSection.classList.add('hidden');
         tableSection.classList.remove('hidden');
+        resetAuthorForm();
+        clearMessage('authorMessage');
+    }
+}
+
+function cancelAuthorEdit() {
+    hideAuthorForm();
+}
+
+function resetAuthorForm() {
+    const form = document.getElementById('formAuthor');
+    if (form) {
+        form.reset();
+        document.getElementById('editAuthorId').value = '';
+        document.getElementById('authorFormTitle').textContent = 'Add New Author';
+        const submitBtn = document.getElementById('btnSubmitAuthor');
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Author';
+    }
+}
+
+async function loadAuthors() {
+    try {
+        const response = await fetch('/Authors/GetAll');
+        if (response.ok) {
+            const authors = await response.json();
+            displayAuthors(authors);
+        }
+    } catch (error) {
+        console.error('Error loading authors:', error);
+    }
+}
+
+function displayAuthors(authors) {
+    const container = document.getElementById('authorsTableContainer');
+
+    if (!authors || authors.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-edit empty-icon"></i>
+                <h3>No authors yet</h3>
+                <p>Start adding authors to your library!</p>
+                <button class="btn-primary" onclick="showAuthorForm()">
+                    <i class="fas fa-plus"></i> Add Your First Author
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    let tableHtml = `
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>NAME</th>
+                    <th>NATIONALITY</th>
+                    <th>BOOKS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    authors.forEach(author => {
+        tableHtml += `
+            <tr data-id="${author.id}">
+                <td class="book-title">${author.name}</td>
+                <td>${author.nationality || '-'}</td>
+                <td>${author.bookCount || 0}</td>
+                <td class="actions">
+                    <button class="btn-icon btn-icon-edit" onclick="editAuthor(${author.id})" title="Edit author">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-icon-delete" onclick="deleteAuthor(${author.id})" title="Delete author">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = tableHtml;
+}
+
+async function addAuthor(authorData) {
+    try {
+        const response = await fetch('/Authors/Create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(authorData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showMessage('authorMessage', 'Author added successfully!', 'success');
+            resetAuthorForm();
+
+            setTimeout(() => {
+                hideAuthorForm();
+                loadAuthors();
+            }, 1000);
+        } else {
+            const errorMessage = await getErrorMessage(response);
+            showMessage('authorMessage', errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error adding author:', error);
+        showMessage('authorMessage', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+async function updateAuthor(id, authorData) {
+    try {
+        const response = await fetch(`/Authors/Update/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(authorData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showMessage('authorMessage', 'Author updated successfully!', 'success');
+            resetAuthorForm();
+
+            setTimeout(() => {
+                hideAuthorForm();
+                loadAuthors();
+            }, 1000);
+        } else {
+            const errorMessage = await getErrorMessage(response);
+            showMessage('authorMessage', errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating author:', error);
+        showMessage('authorMessage', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+async function editAuthor(id) {
+    try {
+        const response = await fetch(`/Authors/Get/${id}`);
+
+        if (response.ok) {
+            const author = await response.json();
+
+            document.getElementById('editAuthorId').value = author.id;
+            document.getElementById('authorName').value = author.name;
+            document.getElementById('authorNationality').value = author.nationality || '';
+            document.getElementById('authorBio').value = author.bio || '';
+
+            document.getElementById('authorFormTitle').textContent = 'Edit Author';
+            const submitBtn = document.getElementById('btnSubmitAuthor');
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Author';
+
+            showAuthorForm();
+        } else {
+            showMessage('authorMessage', 'Error loading author', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading author:', error);
+        showMessage('authorMessage', 'Error loading author', 'error');
+    }
+}
+
+async function deleteAuthor(id) {
+    if (!confirm('Are you sure you want to delete this author?\\n\\nThis action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/Authors/Delete/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showMessage('authorMessage', 'Author deleted successfully!', 'success');
+
+            const row = document.querySelector(`#authorsTableContainer tr[data-id="${id}"]`);
+            if (row) {
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+
+            setTimeout(() => {
+                loadAuthors();
+            }, 1000);
+        } else {
+            showMessage('authorMessage', 'Error deleting author', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting author:', error);
+        showMessage('authorMessage', 'Error connecting to server', 'error');
+    }
+}
+
+// ===== COLLECTIONS SECTION =====
+
+function showCollectionForm() {
+    showSection('collections');
+    const formSection = document.getElementById('collectionFormSection');
+    const tableSection = document.getElementById('collectionsSection');
+
+    if (formSection && tableSection) {
+        formSection.classList.remove('hidden');
+        tableSection.classList.add('hidden');
+    }
+
+    // Set active nav
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    document.getElementById('nav-collections')?.classList.add('active');
+}
+
+function hideCollectionForm() {
+    const formSection = document.getElementById('collectionFormSection');
+    const tableSection = document.getElementById('collectionsSection');
+
+    if (formSection && tableSection) {
+        formSection.classList.add('hidden');
+        tableSection.classList.remove('hidden');
+        resetCollectionForm();
+        clearMessage('collectionMessage');
+    }
+}
+
+function cancelCollectionEdit() {
+    hideCollectionForm();
+}
+
+function resetCollectionForm() {
+    const form = document.getElementById('formCollection');
+    if (form) {
+        form.reset();
+        document.getElementById('editCollectionId').value = '';
+        document.getElementById('collectionFormTitle').textContent = 'Create New Collection';
+        const submitBtn = document.getElementById('btnSubmitCollection');
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Collection';
+    }
+}
+
+async function loadCollections() {
+    try {
+        const response = await fetch('/Collections/GetAll');
+        if (response.ok) {
+            const collections = await response.json();
+            displayCollections(collections);
+        }
+    } catch (error) {
+        console.error('Error loading collections:', error);
+    }
+}
+
+function displayCollections(collections) {
+    const container = document.getElementById('collectionsContainer');
+
+    if (!collections || collections.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-layer-group empty-icon"></i>
+                <h3>No collections yet</h3>
+                <p>Create collections to organize your books by series, genre, or theme!</p>
+                <button class="btn-primary" onclick="showCollectionForm()">
+                    <i class="fas fa-plus"></i> Create Your First Collection
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    let cardsHtml = '';
+
+    collections.forEach(collection => {
+        cardsHtml += `
+            <div class="collection-card" data-id="${collection.id}">
+                <div class="collection-header">
+                    <h3>${collection.name}</h3>
+                    <div class="collection-actions">
+                        <button class="btn-icon btn-icon-edit" onclick="editCollection(${collection.id})" title="Edit collection">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-icon-delete" onclick="deleteCollection(${collection.id})" title="Delete collection">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="collection-description">${collection.description || 'No description'}</p>
+                <div class="collection-stats">
+                    <span><i class="fas fa-book"></i> ${collection.bookCount || 0} books</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = cardsHtml;
+}
+
+async function addCollection(collectionData) {
+    try {
+        const response = await fetch('/Collections/Create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(collectionData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showMessage('collectionMessage', 'Collection created successfully!', 'success');
+            resetCollectionForm();
+
+            setTimeout(() => {
+                hideCollectionForm();
+                loadCollections();
+            }, 1000);
+        } else {
+            const errorMessage = await getErrorMessage(response);
+            showMessage('collectionMessage', errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating collection:', error);
+        showMessage('collectionMessage', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+async function updateCollection(id, collectionData) {
+    try {
+        const response = await fetch(`/Collections/Update/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(collectionData)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showMessage('collectionMessage', 'Collection updated successfully!', 'success');
+            resetCollectionForm();
+
+            setTimeout(() => {
+                hideCollectionForm();
+                loadCollections();
+            }, 1000);
+        } else {
+            const errorMessage = await getErrorMessage(response);
+            showMessage('collectionMessage', errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating collection:', error);
+        showMessage('collectionMessage', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+async function editCollection(id) {
+    try {
+        const response = await fetch(`/Collections/Get/${id}`);
+
+        if (response.ok) {
+            const collection = await response.json();
+
+            document.getElementById('editCollectionId').value = collection.id;
+            document.getElementById('collectionName').value = collection.name;
+            document.getElementById('collectionDescription').value = collection.description || '';
+
+            document.getElementById('collectionFormTitle').textContent = 'Edit Collection';
+            const submitBtn = document.getElementById('btnSubmitCollection');
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Collection';
+
+            showCollectionForm();
+        } else {
+            showMessage('collectionMessage', 'Error loading collection', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading collection:', error);
+        showMessage('collectionMessage', 'Error loading collection', 'error');
+    }
+}
+
+async function deleteCollection(id) {
+    if (!confirm('Are you sure you want to delete this collection?\\n\\nThis action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/Collections/Delete/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            showMessage('collectionMessage', 'Collection deleted successfully!', 'success');
+
+            const card = document.querySelector(`.collection-card[data-id="${id}"]`);
+            if (card) {
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            }
+
+            setTimeout(() => {
+                loadCollections();
+            }, 1000);
+        } else {
+            showMessage('collectionMessage', 'Error deleting collection', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting collection:', error);
+        showMessage('collectionMessage', 'Error connecting to server', 'error');
     }
 }
 
@@ -186,6 +697,57 @@ if (formBook) {
             await updateBook(editId, bookData);
         } else {
             await addBook(bookData);
+        }
+    });
+}
+
+// Author form submission
+const formAuthor = document.getElementById('formAuthor');
+if (formAuthor) {
+    formAuthor.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById('editAuthorId').value;
+        const authorData = {
+            name: document.getElementById('authorName').value.trim(),
+            nationality: document.getElementById('authorNationality').value.trim() || null,
+            bio: document.getElementById('authorBio').value.trim() || null
+        };
+
+        if (!authorData.name) {
+            showMessage('authorMessage', 'Please fill in author name', 'error');
+            return;
+        }
+
+        if (editId) {
+            await updateAuthor(editId, authorData);
+        } else {
+            await addAuthor(authorData);
+        }
+    });
+}
+
+// Collection form submission
+const formCollection = document.getElementById('formCollection');
+if (formCollection) {
+    formCollection.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const editId = document.getElementById('editCollectionId').value;
+        const collectionData = {
+            name: document.getElementById('collectionName').value.trim(),
+            description: document.getElementById('collectionDescription').value.trim() || null
+        };
+
+        if (!collectionData.name) {
+            showMessage('collectionMessage', 'Please fill in collection name', 'error');
+            return;
+        }
+
+        if (editId) {
+            await updateCollection(editId, collectionData);
+        } else {
+            await addCollection(collectionData);
         }
     });
 }

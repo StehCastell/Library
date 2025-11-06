@@ -43,11 +43,29 @@ namespace LibraryAPI.Models
         [Column("status")]
         public string Status { get; set; } = string.Empty; // "read", "reading", "unread"
 
+        [Column("has_physical_copy")]
+        public bool HasPhysicalCopy { get; set; } = false;
+
+        [StringLength(20)]
+        [Column("isbn")]
+        public string? Isbn { get; set; }
+
+        [Column("publication_year")]
+        public int? PublicationYear { get; set; }
+
+        [StringLength(500)]
+        [Column("cover_image_url")]
+        public string? CoverImageUrl { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Relationship with User
+        // Relationships
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }
+
+        public virtual List<BookAuthor>? BookAuthors { get; set; }
+
+        public virtual List<CollectionBook>? CollectionBooks { get; set; }
     }
 }

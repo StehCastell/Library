@@ -24,7 +24,7 @@ namespace LibraryWeb.Services
                 var json = JsonConvert.SerializeObject(model);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/Users/register", content);
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/register", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -47,7 +47,7 @@ namespace LibraryWeb.Services
                 var json = JsonConvert.SerializeObject(model);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/Users/login", content);
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -67,7 +67,7 @@ namespace LibraryWeb.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/api/Users/{id}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -89,7 +89,7 @@ namespace LibraryWeb.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/Books");
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/books");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -109,7 +109,7 @@ namespace LibraryWeb.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/Books/{bookId}");
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/books/{bookId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -132,7 +132,7 @@ namespace LibraryWeb.Services
                 var json = JsonConvert.SerializeObject(book);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/{userId}/Books", content);
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/{userId}/books", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -155,7 +155,7 @@ namespace LibraryWeb.Services
                 var json = JsonConvert.SerializeObject(book);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/Books/{bookId}", content);
+                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/books/{bookId}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -175,7 +175,235 @@ namespace LibraryWeb.Services
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/users/{userId}/Books/{bookId}");
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/users/{userId}/books/{bookId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // ========== AUTHORS ==========
+
+        public async Task<List<Author>> GetAuthorsAsync(int userId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/authors");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<List<Author>>(responseContent) ?? new List<Author>();
+                }
+
+                return new List<Author>();
+            }
+            catch
+            {
+                return new List<Author>();
+            }
+        }
+
+        public async Task<Author?> GetAuthorByIdAsync(int userId, int authorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/authors/{authorId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Author>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Author?> CreateAuthorAsync(int userId, Author author)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(author);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/{userId}/authors", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Author>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Author?> UpdateAuthorAsync(int userId, int authorId, Author author)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(author);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/authors/{authorId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Author>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> DeleteAuthorAsync(int userId, int authorId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/users/{userId}/authors/{authorId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // ========== COLLECTIONS ==========
+
+        public async Task<List<Collection>> GetCollectionsAsync(int userId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/collections");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<List<Collection>>(responseContent) ?? new List<Collection>();
+                }
+
+                return new List<Collection>();
+            }
+            catch
+            {
+                return new List<Collection>();
+            }
+        }
+
+        public async Task<Collection?> GetCollectionByIdAsync(int userId, int collectionId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}/api/users/{userId}/collections/{collectionId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Collection>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Collection?> CreateCollectionAsync(int userId, Collection collection)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(collection);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/{userId}/collections", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Collection>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Collection?> UpdateCollectionAsync(int userId, int collectionId, Collection collection)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(collection);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/collections/{collectionId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Collection>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> DeleteCollectionAsync(int userId, int collectionId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/users/{userId}/collections/{collectionId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBookToCollectionAsync(int userId, int collectionId, int bookId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/users/{userId}/collections/{collectionId}/books/{bookId}", null);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveBookFromCollectionAsync(int userId, int collectionId, int bookId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/users/{userId}/collections/{collectionId}/books/{bookId}");
                 return response.IsSuccessStatusCode;
             }
             catch
