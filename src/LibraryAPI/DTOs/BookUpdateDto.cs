@@ -25,7 +25,7 @@ namespace LibraryAPI.DTOs
         public string Type { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Status é obrigatório")]
-        [RegularExpression("^(read|reading|not-read)$", ErrorMessage = "Status deve ser 'lido', 'lendo' ou 'nao-lido'")]
+        [RegularExpression("^(read|reading|not-read|abandoned)$", ErrorMessage = "Status deve ser 'read', 'reading', 'not-read' ou 'abandoned'")]
         public string Status { get; set; } = string.Empty;
     }
 }

@@ -8,6 +8,7 @@ namespace LibraryWeb.Services
         Task<User?> RegisterAsync(RegisterViewModel model);
         Task<User?> LoginAsync(LoginViewModel model);
         Task<User?> GetUserByIdAsync(int id);
+        Task<bool> UpdateUserThemeAsync(int userId, string theme);
 
         // Books
         Task<List<Book>> GetBooksAsync(int userId);
@@ -15,6 +16,9 @@ namespace LibraryWeb.Services
         Task<Book?> CreateBookAsync(int userId, Book book);
         Task<Book?> UpdateBookAsync(int userId, int bookId, Book book);
         Task<bool> DeleteBookAsync(int userId, int bookId);
+        Task<List<Author>> GetBookAuthorsAsync(int bookId, int userId);
+        Task<bool> AddAuthorToBookAsync(int userId, int bookId, int authorId);
+        Task<bool> RemoveAuthorFromBookAsync(int userId, int bookId, int authorId);
 
         // Authors
         Task<List<Author>> GetAuthorsAsync(int userId);
@@ -31,5 +35,7 @@ namespace LibraryWeb.Services
         Task<bool> DeleteCollectionAsync(int userId, int collectionId);
         Task<bool> AddBookToCollectionAsync(int userId, int collectionId, int bookId);
         Task<bool> RemoveBookFromCollectionAsync(int userId, int collectionId, int bookId);
+        Task<bool> AddAuthorToCollectionAsync(int userId, int collectionId, int authorId);
+        Task<bool> RemoveAuthorFromCollectionAsync(int userId, int collectionId, int authorId);
     }
 }

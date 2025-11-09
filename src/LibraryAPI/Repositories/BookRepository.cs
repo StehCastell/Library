@@ -55,5 +55,49 @@ namespace LibraryAPI.Repositories
         {
             return await _context.Books.AnyAsync(l => l.Id == id);
         }
+
+        public async Task<bool> AddAuthorToBookAsync(int bookId, int authorId)
+        {
+            try
+            {
+                // Verifica se já existe
+                var exists = await _context.BookAuthors
+                    .AnyAsync(ba => ba.BookId == bookId && ba.AuthorId == authorId);
+
+                if (exists)
+                {
+                    Console.WriteLine($"⚠️ Author {authorId} already exists in book {bookId}, returning true (idempotent)");
+                    return true;
+                }
+
+                var bookAuthor = new BookAuthor
+                {
+                    BookId = bookId,
+                    AuthorId = authorId
+                };
+
+                _context.BookAuthors.Add(bookAuthor);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception in AddAuthorToBookAsync: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveAuthorFromBookAsync(int bookId, int authorId)
+        {
+            var bookAuthor = await _context.BookAuthors
+                .FirstOrDefaultAsync(ba => ba.BookId == bookId && ba.AuthorId == authorId);
+
+            if (bookAuthor == null)
+                return false;
+
+            _context.BookAuthors.Remove(bookAuthor);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

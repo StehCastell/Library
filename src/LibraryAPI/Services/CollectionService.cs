@@ -78,17 +78,32 @@ namespace LibraryAPI.Services
 
         public async Task<bool> AddBookToCollectionAsync(int collectionId, int bookId, int userId)
         {
+            Console.WriteLine($"🔍 CollectionService.AddBookToCollectionAsync - collectionId: {collectionId}, bookId: {bookId}, userId: {userId}");
+
             var collection = await _collectionRepository.GetByIdAsync(collectionId);
 
-            if (collection == null || collection.UserId != userId)
+            if (collection == null)
             {
+                Console.WriteLine($"❌ Collection {collectionId} not found");
                 return false;
             }
 
-            // Calculate next display order
-            var maxOrder = collection.CollectionBooks?.Max(cb => cb.DisplayOrder) ?? 0;
+            if (collection.UserId != userId)
+            {
+                Console.WriteLine($"❌ Collection {collectionId} does not belong to user {userId}. Collection.UserId: {collection.UserId}");
+                return false;
+            }
 
-            return await _collectionRepository.AddBookToCollectionAsync(collectionId, bookId, maxOrder + 1);
+            Console.WriteLine($"✅ Collection validated. Current book count: {collection.CollectionBooks?.Count ?? 0}");
+
+            // Calculate next display order
+            var maxOrder = collection.CollectionBooks?.Select(cb => cb.DisplayOrder).DefaultIfEmpty(0).Max() ?? 0;
+            Console.WriteLine($"📊 Next display order: {maxOrder + 1}");
+
+            var result = await _collectionRepository.AddBookToCollectionAsync(collectionId, bookId, maxOrder + 1);
+            Console.WriteLine($"🎯 Repository returned: {result}");
+
+            return result;
         }
 
         public async Task<bool> RemoveBookFromCollectionAsync(int collectionId, int bookId, int userId)
@@ -142,8 +157,10 @@ namespace LibraryAPI.Services
                     .Select(cb => new CollectionBookDto
                     {
                         BookId = cb.BookId,
+                        Id = cb.Book?.Id ?? 0,
                         Title = cb.Book?.Title ?? "",
                         Author = cb.Book?.Author ?? "",
+                        Status = cb.Book?.Status ?? "",
                         DisplayOrder = cb.DisplayOrder
                     }).ToList(),
                 Authors = collection.CollectionAuthors?

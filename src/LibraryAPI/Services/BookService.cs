@@ -7,10 +7,12 @@ namespace LibraryAPI.Services
     public class BookService : IBookService
     {
         private readonly IBookRepository _bookRepository;
+        private readonly IAuthorRepository _authorRepository;
 
-        public BookService(IBookRepository bookRepository)
+        public BookService(IBookRepository bookRepository, IAuthorRepository authorRepository)
         {
             _bookRepository = bookRepository;
+            _authorRepository = authorRepository;
         }
 
         public async Task<BookResponseDto?> CreateAsync(int userId, BookCreateDto bookDto)
@@ -82,6 +84,50 @@ namespace LibraryAPI.Services
             var books = await _bookRepository.GetByUserIdAsync(userId);
 
             return books.Select(MapToResponseDto);
+        }
+
+        public async Task<bool> AddAuthorToBookAsync(int bookId, int authorId, int userId)
+        {
+            var book = await _bookRepository.GetByIdAsync(bookId);
+
+            if (book == null || book.UserId != userId)
+            {
+                return false;
+            }
+
+            return await _bookRepository.AddAuthorToBookAsync(bookId, authorId);
+        }
+
+        public async Task<bool> RemoveAuthorFromBookAsync(int bookId, int authorId, int userId)
+        {
+            var book = await _bookRepository.GetByIdAsync(bookId);
+
+            if (book == null || book.UserId != userId)
+            {
+                return false;
+            }
+
+            return await _bookRepository.RemoveAuthorFromBookAsync(bookId, authorId);
+        }
+
+        public async Task<IEnumerable<AuthorResponseDto>?> GetBookAuthorsAsync(int bookId, int userId)
+        {
+            var book = await _bookRepository.GetByIdAsync(bookId);
+
+            if (book == null || book.UserId != userId)
+            {
+                return null;
+            }
+
+            var authors = await _authorRepository.GetAuthorsByBookIdAsync(bookId);
+
+            return authors.Select(a => new AuthorResponseDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Nationality = a.Nationality,
+                Bio = a.Bio
+            });
         }
 
         private BookResponseDto MapToResponseDto(Book book)

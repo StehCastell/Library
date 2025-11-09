@@ -28,6 +28,10 @@ namespace LibraryAPI.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        [StringLength(10)]
+        [Column("theme")]
+        public string Theme { get; set; } = "light";
+
         // Relationship with Books
         public virtual ICollection<Book> Books { get; set; } = new List<Book>();
     }

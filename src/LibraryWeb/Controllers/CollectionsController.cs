@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryWeb.Controllers
 {
+    [Route("[controller]")]
     public class CollectionsController : Controller
     {
         private readonly IApiService _apiService;
@@ -24,6 +25,8 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Collections
+        [HttpGet("")]
+        [HttpGet("Index")]
         public IActionResult Index()
         {
             if (!IsLoggedIn())
@@ -32,11 +35,13 @@ namespace LibraryWeb.Controllers
             }
 
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserId = GetUserId();
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
             return View(new List<Collection>());
         }
 
         // POST: Collections/Create
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] Collection collection)
         {
             try
@@ -75,7 +80,7 @@ namespace LibraryWeb.Controllers
         }
 
         // PUT: Collections/Update/5
-        [HttpPut]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Collection collection)
         {
             if (!IsLoggedIn())
@@ -97,7 +102,7 @@ namespace LibraryWeb.Controllers
         }
 
         // DELETE: Collections/Delete/5
-        [HttpDelete]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!IsLoggedIn())
@@ -117,7 +122,7 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Collections/Get/5
-        [HttpGet]
+        [HttpGet("Get/{id}")]
         public async Task<IActionResult> Get(int id)
         {
             if (!IsLoggedIn())
@@ -137,7 +142,7 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Collections/GetAll
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
             if (!IsLoggedIn())
@@ -151,28 +156,35 @@ namespace LibraryWeb.Controllers
             return Ok(collections ?? new List<Collection>());
         }
 
-        // POST: Collections/AddBook/{collectionId}/{bookId}
-        [HttpPost]
+        // POST: Collections/AddBook
+        [HttpPost("AddBook/{collectionId}/{bookId}")]
         public async Task<IActionResult> AddBook(int collectionId, int bookId)
         {
+            Console.WriteLine($"📤 AddBook called: collectionId={collectionId}, bookId={bookId}");
+
             if (!IsLoggedIn())
             {
+                Console.WriteLine("❌ User not logged in");
                 return Unauthorized();
             }
 
             var userId = GetUserId();
+            Console.WriteLine($"👤 UserId: {userId}");
+
             var success = await _apiService.AddBookToCollectionAsync(userId, collectionId, bookId);
+            Console.WriteLine($"✅ AddBookToCollectionAsync result: {success}");
 
             if (!success)
             {
+                Console.WriteLine("❌ Failed to add book to collection");
                 return BadRequest(new { message = "Error adding book to collection" });
             }
 
             return Ok(new { message = "Book added to collection successfully" });
         }
 
-        // DELETE: Collections/RemoveBook/{collectionId}/{bookId}
-        [HttpDelete]
+        // DELETE: Collections/RemoveBook
+        [HttpDelete("RemoveBook/{collectionId}/{bookId}")]
         public async Task<IActionResult> RemoveBook(int collectionId, int bookId)
         {
             if (!IsLoggedIn())
@@ -189,6 +201,53 @@ namespace LibraryWeb.Controllers
             }
 
             return Ok(new { message = "Book removed from collection successfully" });
+        }
+
+        // POST: Collections/AddAuthor
+        [HttpPost("AddAuthor/{collectionId}/{authorId}")]
+        public async Task<IActionResult> AddAuthor(int collectionId, int authorId)
+        {
+            Console.WriteLine($"📤 AddAuthor called: collectionId={collectionId}, authorId={authorId}");
+
+            if (!IsLoggedIn())
+            {
+                Console.WriteLine("❌ User not logged in");
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            Console.WriteLine($"👤 UserId: {userId}");
+
+            var success = await _apiService.AddAuthorToCollectionAsync(userId, collectionId, authorId);
+            Console.WriteLine($"✅ AddAuthorToCollectionAsync result: {success}");
+
+            if (!success)
+            {
+                Console.WriteLine("❌ Failed to add author to collection");
+                return BadRequest(new { message = "Error adding author to collection" });
+            }
+
+            return Ok(new { message = "Author added to collection successfully" });
+        }
+
+        // DELETE: Collections/RemoveAuthor
+        [HttpDelete("RemoveAuthor/{collectionId}/{authorId}")]
+        public async Task<IActionResult> RemoveAuthor(int collectionId, int authorId)
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var success = await _apiService.RemoveAuthorFromCollectionAsync(userId, collectionId, authorId);
+
+            if (!success)
+            {
+                return NotFound(new { message = "Author not found in collection" });
+            }
+
+            return Ok(new { message = "Author removed from collection successfully" });
         }
     }
 }

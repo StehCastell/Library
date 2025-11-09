@@ -4,12 +4,51 @@ let allBooks = [];
 let allAuthors = [];
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
     loadCollections();
     loadBooksForSelect();
     loadAuthorsForSelect();
     initializeCollectionForm();
     initializeModals();
 });
+
+// ===== THEME MANAGEMENT =====
+async function changeTheme() {
+    const currentTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+    applyTheme(currentTheme);
+    localStorage.setItem('theme', currentTheme);
+
+    // Save to database
+    try {
+        const response = await fetch('/books/UpdateTheme', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ theme: currentTheme })
+        });
+
+        if (!response.ok) {
+            console.error('Failed to save theme to database');
+        }
+    } catch (error) {
+        console.error('Error saving theme:', error);
+    }
+}
+
+function applyTheme(theme) {
+    const themeIcon = document.querySelector('.theme-toggle-btn i');
+    if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+    } else {
+        document.body.classList.remove('dark-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+    }
+}
 
 // ===== SIDEBAR TOGGLE =====
 function toggleSidebar() {
@@ -74,10 +113,13 @@ function initializeModals() {
 
 async function loadBooksForSelect() {
     try {
-        const response = await fetch('/Books/GetAll');
+        const response = await fetch('/books/getall');
         if (response.ok) {
             allBooks = await response.json();
+            console.log('Books loaded:', allBooks.length, allBooks);
             initializeBookSelect();
+        } else {
+            console.error('Failed to load books:', response.status, response.statusText);
         }
     } catch (error) {
         console.error('Error loading books:', error);
@@ -86,7 +128,7 @@ async function loadBooksForSelect() {
 
 async function loadAuthorsForSelect() {
     try {
-        const response = await fetch('/Authors/GetAll');
+        const response = await fetch('/authors/getall');
         if (response.ok) {
             allAuthors = await response.json();
             initializeAuthorSelect();
@@ -97,10 +139,20 @@ async function loadAuthorsForSelect() {
 }
 
 function initializeBookSelect() {
+    console.log('Initializing book select, total books:', allBooks.length);
+
     // Sort books alphabetically by title
     const sortedBooks = [...allBooks].sort((a, b) => a.title.localeCompare(b.title));
 
     const select = $('#collectionBooks');
+    console.log('Select element found:', select.length > 0);
+
+    // Destroy existing Select2 if present
+    if (select.hasClass("select2-hidden-accessible")) {
+        console.log('Destroying existing Select2');
+        select.select2('destroy');
+    }
+
     select.empty();
 
     sortedBooks.forEach(book => {
@@ -108,12 +160,24 @@ function initializeBookSelect() {
         select.append(option);
     });
 
+    console.log('Options added to select:', select.find('option').length);
+
     // Initialize Select2 with search
-    select.select2({
-        placeholder: 'Select books...',
-        allowClear: true,
-        width: '100%'
-    });
+    try {
+        select.select2({
+            placeholder: 'Select books...',
+            allowClear: true,
+            width: '100%'
+        });
+        console.log('Select2 initialized successfully');
+
+        // Add event listener to update badges when selection changes
+        select.on('change', function() {
+            updateBookBadges();
+        });
+    } catch (error) {
+        console.error('Error initializing Select2:', error);
+    }
 }
 
 function initializeAuthorSelect() {
@@ -121,6 +185,12 @@ function initializeAuthorSelect() {
     const sortedAuthors = [...allAuthors].sort((a, b) => a.name.localeCompare(b.name));
 
     const select = $('#collectionAuthors');
+
+    // Destroy existing Select2 if present
+    if (select.hasClass("select2-hidden-accessible")) {
+        select.select2('destroy');
+    }
+
     select.empty();
 
     sortedAuthors.forEach(author => {
@@ -134,6 +204,71 @@ function initializeAuthorSelect() {
         allowClear: true,
         width: '100%'
     });
+
+    // Add event listener to update badges when selection changes
+    select.on('change', function() {
+        updateCollectionAuthorBadges();
+    });
+}
+
+// ===== BADGE FUNCTIONS =====
+
+function updateCollectionAuthorBadges() {
+    const selectedIds = $('#collectionAuthors').val() || [];
+    const badgesContainer = document.getElementById('selectedCollectionAuthorsBadges');
+
+    if (!badgesContainer) return;
+
+    badgesContainer.innerHTML = '';
+
+    selectedIds.forEach(authorId => {
+        const author = allAuthors.find(a => a.id == authorId);
+        if (author) {
+            const badge = document.createElement('div');
+            badge.className = 'author-badge';
+            badge.innerHTML = `
+                <span>${author.name}</span>
+                <span class="author-badge-remove" onclick="removeCollectionAuthorBadge(${authorId})">×</span>
+            `;
+            badgesContainer.appendChild(badge);
+        }
+    });
+}
+
+function removeCollectionAuthorBadge(authorId) {
+    const select = $('#collectionAuthors');
+    const selectedValues = select.val() || [];
+    const newValues = selectedValues.filter(id => id != authorId);
+    select.val(newValues).trigger('change');
+}
+
+function updateBookBadges() {
+    const selectedIds = $('#collectionBooks').val() || [];
+    const badgesContainer = document.getElementById('selectedCollectionBooksBadges');
+
+    if (!badgesContainer) return;
+
+    badgesContainer.innerHTML = '';
+
+    selectedIds.forEach(bookId => {
+        const book = allBooks.find(b => b.id == bookId);
+        if (book) {
+            const badge = document.createElement('div');
+            badge.className = 'book-badge';
+            badge.innerHTML = `
+                <span>${book.title}</span>
+                <span class="book-badge-remove" onclick="removeBookBadge(${bookId})">×</span>
+            `;
+            badgesContainer.appendChild(badge);
+        }
+    });
+}
+
+function removeBookBadge(bookId) {
+    const select = $('#collectionBooks');
+    const selectedValues = select.val() || [];
+    const newValues = selectedValues.filter(id => id != bookId);
+    select.val(newValues).trigger('change');
 }
 
 // ===== MODAL FUNCTIONS =====
@@ -159,12 +294,15 @@ function closeAddAuthorModal() {
 async function handleAddBookFromModal() {
     const bookData = {
         title: document.getElementById('modalBookTitle').value,
-        author: document.getElementById('modalBookAuthor').value || null,
-        status: 'not-read'
+        author: document.getElementById('modalBookAuthor').value,
+        genre: document.getElementById('modalBookGenre').value,
+        pages: parseInt(document.getElementById('modalBookPages').value),
+        type: document.getElementById('modalBookType').value,
+        status: document.getElementById('modalBookStatus').value
     };
 
     try {
-        const response = await fetch('/Books/Create', {
+        const response = await fetch('/books/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -201,7 +339,7 @@ async function handleAddAuthorFromModal() {
     };
 
     try {
-        const response = await fetch('/Authors/Create', {
+        const response = await fetch('/authors/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -275,9 +413,10 @@ function resetCollectionForm() {
 
 async function loadCollections() {
     try {
-        const response = await fetch('/Collections/GetAll');
+        const response = await fetch('/collections/getall');
         if (response.ok) {
             const collections = await response.json();
+            console.log('Collections received:', collections);
             displayCollections(collections);
         }
     } catch (error) {
@@ -286,20 +425,33 @@ async function loadCollections() {
 }
 
 function calculateCollectionStatus(books) {
+    // Se não houver livros, status é não iniciado
     if (!books || books.length === 0) {
-        return 'not-read';
+        return 'not-started';
     }
 
-    const allRead = books.every(book => book.status === 'read');
-    const anyInProgress = books.some(book => book.status === 'reading' || book.status === 'read');
+    // Contar status dos livros
+    const totalBooks = books.length;
+    const completedBooks = books.filter(book => book.status === 'read').length;
+    const readingBooks = books.filter(book => book.status === 'reading').length;
 
-    if (allRead) {
-        return 'read';
-    } else if (anyInProgress) {
+    // Se TODOS os livros estão concluídos
+    if (completedBooks === totalBooks) {
+        return 'completed';
+    }
+
+    // Se nenhum livro está concluído ou sendo lido
+    if (completedBooks === 0 && readingBooks === 0) {
+        return 'not-started';
+    }
+
+    // Se tem pelo menos 1 livro em andamento OU pelo menos 1 concluído (mas não todos)
+    if (readingBooks > 0 || (completedBooks > 0 && completedBooks < totalBooks)) {
         return 'in-progress';
-    } else {
-        return 'not-read';
     }
+
+    // Fallback
+    return 'not-started';
 }
 
 function displayCollections(collections) {
@@ -322,9 +474,41 @@ function displayCollections(collections) {
     let cardsHtml = '';
 
     collections.forEach(collection => {
+        console.log('Collection:', collection.name, 'Authors:', collection.authors);
         const status = calculateCollectionStatus(collection.books);
-        const statusClass = status === 'read' ? 'success' : status === 'in-progress' ? 'warning' : 'info';
-        const statusLabel = status === 'read' ? 'Completed' : status === 'in-progress' ? 'In Progress' : 'Not Started';
+
+        // Determinar classe e label baseado no status
+        let statusClass, statusLabel, statusIcon;
+        if (status === 'completed') {
+            statusClass = 'success';
+            statusLabel = 'Reading Completed';
+            statusIcon = 'fa-check-circle';
+        } else if (status === 'in-progress') {
+            statusClass = 'warning';
+            statusLabel = 'Reading in Progress';
+            statusIcon = 'fa-book-reader';
+        } else {
+            statusClass = 'info';
+            statusLabel = 'Not Started';
+            statusIcon = 'fa-bookmark';
+        }
+
+        // Build authors list
+        let authorsHtml = '';
+        if (collection.authors && collection.authors.length > 0) {
+            const authorNames = collection.authors.map(author => author.name).join(', ');
+            authorsHtml = `
+                <div class="collection-authors">
+                    <i class="fas fa-user-pen"></i>
+                    <span>${authorNames}</span>
+                </div>
+            `;
+        }
+
+        // Calcular progresso de leitura
+        const totalBooks = collection.books ? collection.books.length : 0;
+        const completedBooks = collection.books ? collection.books.filter(b => b.status === 'read').length : 0;
+        const booksProgressText = totalBooks > 0 ? `${completedBooks}/${totalBooks} books read` : 'No books';
 
         cardsHtml += `
             <div class="collection-card" data-id="${collection.id}">
@@ -340,8 +524,14 @@ function displayCollections(collections) {
                     </div>
                 </div>
                 <p class="collection-description">${collection.description || 'No description'}</p>
+                ${authorsHtml}
                 <div class="collection-stats">
-                    <span class="status-badge status-${statusClass}">${statusLabel}</span>
+                    <span class="status-badge status-${statusClass}">
+                        <i class="fas ${statusIcon}"></i> ${statusLabel}
+                    </span>
+                    <span class="books-count">
+                        <i class="fas fa-book"></i> ${booksProgressText}
+                    </span>
                 </div>
             </div>
         `;
@@ -352,7 +542,7 @@ function displayCollections(collections) {
 
 async function addCollection(collectionData) {
     try {
-        const response = await fetch('/Collections/Create', {
+        const response = await fetch('/collections/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -362,6 +552,34 @@ async function addCollection(collectionData) {
 
         if (response.ok) {
             const result = await response.json();
+
+            // Get selected authors and books
+            const selectedAuthors = $('#collectionAuthors').val() || [];
+            const selectedBooks = $('#collectionBooks').val() || [];
+
+            // Add authors to the collection
+            for (const authorId of selectedAuthors) {
+                console.log(`Adding author ${authorId} to collection ${result.id}`);
+                const response = await fetch(`/collections/addauthor/${result.id}/${authorId}`, {
+                    method: 'POST'
+                });
+                console.log(`Add author response:`, response.status, response.statusText);
+            }
+
+            // Add books to the collection
+            for (const bookId of selectedBooks) {
+                console.log(`Adding book ${bookId} to collection ${result.id}`);
+                const response = await fetch(`/collections/addbook/${result.id}/${bookId}`, {
+                    method: 'POST'
+                });
+                console.log(`Add book response:`, response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                    console.error(`Failed to add book ${bookId}:`, errorData);
+                }
+            }
+
             showMessage('collectionMessage', 'Collection created successfully!', 'success');
             resetCollectionForm();
 
@@ -381,7 +599,7 @@ async function addCollection(collectionData) {
 
 async function updateCollection(id, collectionData) {
     try {
-        const response = await fetch(`/Collections/Update/${id}`, {
+        const response = await fetch(`/collections/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -391,6 +609,61 @@ async function updateCollection(id, collectionData) {
 
         if (response.ok) {
             const result = await response.json();
+
+            // Get selected authors and books from form
+            const selectedAuthors = $('#collectionAuthors').val() || [];
+            const selectedBooks = $('#collectionBooks').val() || [];
+
+            // Get current collection to compare
+            const currentCollectionResponse = await fetch(`/collections/get/${id}`);
+            const currentCollection = await currentCollectionResponse.json();
+
+            const currentAuthors = (currentCollection.authors || []).map(a => a.authorId);
+            const currentBooks = (currentCollection.books || []).map(b => b.bookId);
+
+            // Remove authors that are no longer selected
+            for (const authorId of currentAuthors) {
+                if (!selectedAuthors.includes(String(authorId))) {
+                    await fetch(`/collections/removeauthor/${id}/${authorId}`, {
+                        method: 'DELETE'
+                    });
+                }
+            }
+
+            // Add new authors
+            for (const authorId of selectedAuthors) {
+                if (!currentAuthors.includes(Number(authorId))) {
+                    await fetch(`/collections/addauthor/${id}/${authorId}`, {
+                        method: 'POST'
+                    });
+                }
+            }
+
+            // Remove books that are no longer selected
+            for (const bookId of currentBooks) {
+                if (!selectedBooks.includes(String(bookId))) {
+                    await fetch(`/collections/removebook/${id}/${bookId}`, {
+                        method: 'DELETE'
+                    });
+                }
+            }
+
+            // Add new books
+            for (const bookId of selectedBooks) {
+                if (!currentBooks.includes(Number(bookId))) {
+                    console.log(`Adding new book ${bookId} to collection ${id}`);
+                    const response = await fetch(`/collections/addbook/${id}/${bookId}`, {
+                        method: 'POST'
+                    });
+                    console.log(`Add book response:`, response.status, response.statusText);
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                        console.error(`Failed to add book ${bookId}:`, errorData);
+                    }
+                }
+            }
+
             showMessage('collectionMessage', 'Collection updated successfully!', 'success');
             resetCollectionForm();
 
@@ -410,7 +683,7 @@ async function updateCollection(id, collectionData) {
 
 async function editCollection(id) {
     try {
-        const response = await fetch(`/Collections/Get/${id}`);
+        const response = await fetch(`/collections/get/${id}`);
 
         if (response.ok) {
             const collection = await response.json();
@@ -423,6 +696,12 @@ async function editCollection(id) {
             if (collection.books && collection.books.length > 0) {
                 const bookIds = collection.books.map(b => b.id);
                 $('#collectionBooks').val(bookIds).trigger('change');
+            }
+
+            // Set selected authors in Select2
+            if (collection.authors && collection.authors.length > 0) {
+                const authorIds = collection.authors.map(a => a.authorId);
+                $('#collectionAuthors').val(authorIds).trigger('change');
             }
 
             document.getElementById('collectionFormTitle').textContent = 'Edit Collection';
@@ -445,7 +724,7 @@ async function deleteCollection(id) {
     }
 
     try {
-        const response = await fetch(`/Collections/Delete/${id}`, {
+        const response = await fetch(`/collections/delete/${id}`, {
             method: 'DELETE'
         });
 

@@ -72,5 +72,26 @@ namespace LibraryAPI.Controllers
 
             return Ok(user);
         }
+
+        /// <summary>
+        /// Update user theme
+        /// </summary>
+        [HttpPut("{id}/theme")]
+        public async Task<ActionResult> UpdateTheme(int id, [FromBody] UserThemeDto themeDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var success = await _userService.UpdateThemeAsync(id, themeDto.Theme);
+
+            if (!success)
+            {
+                return NotFound(new { message = "Usuário not found" });
+            }
+
+            return Ok(new { message = "Theme updated successfully" });
+        }
     }
 }

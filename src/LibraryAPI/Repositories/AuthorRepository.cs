@@ -69,5 +69,14 @@ namespace LibraryAPI.Repositories
         {
             return await _context.Authors.AnyAsync(a => a.Id == id);
         }
+
+        public async Task<IEnumerable<Author>> GetAuthorsByBookIdAsync(int bookId)
+        {
+            return await _context.BookAuthors
+                .Where(ba => ba.BookId == bookId)
+                .Include(ba => ba.Author)
+                .Select(ba => ba.Author)
+                .ToListAsync();
+        }
     }
 }

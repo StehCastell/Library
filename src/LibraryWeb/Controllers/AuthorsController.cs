@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryWeb.Controllers
 {
+    [Route("[controller]")]
     public class AuthorsController : Controller
     {
         private readonly IApiService _apiService;
@@ -24,6 +25,8 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Authors
+        [HttpGet("")]
+        [HttpGet("Index")]
         public IActionResult Index()
         {
             if (!IsLoggedIn())
@@ -32,11 +35,13 @@ namespace LibraryWeb.Controllers
             }
 
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserId = GetUserId();
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
             return View(new List<Author>());
         }
 
         // POST: Authors/Create
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] Author author)
         {
             try
@@ -73,7 +78,7 @@ namespace LibraryWeb.Controllers
         }
 
         // PUT: Authors/Update/5
-        [HttpPut]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Author author)
         {
             if (!IsLoggedIn())
@@ -93,7 +98,7 @@ namespace LibraryWeb.Controllers
         }
 
         // DELETE: Authors/Delete/5
-        [HttpDelete]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!IsLoggedIn())
@@ -113,7 +118,7 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Authors/Get/5
-        [HttpGet]
+        [HttpGet("Get/{id}")]
         public async Task<IActionResult> Get(int id)
         {
             if (!IsLoggedIn())
@@ -133,7 +138,7 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Authors/GetAll
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
             if (!IsLoggedIn())

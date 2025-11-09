@@ -48,6 +48,7 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
+            HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
 
             return RedirectToAction("Index", "Books");
         }
@@ -87,6 +88,7 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
+            HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
 
             return RedirectToAction("Index", "Books");
         }

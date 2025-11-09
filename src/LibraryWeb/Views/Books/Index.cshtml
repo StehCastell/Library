@@ -15,6 +15,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body class="dashboard-layout">
+    <script>
+        // Apply saved theme immediately (before page renders)
+        // Priority: server theme > localStorage > default 'light'
+        const serverTheme = '@ViewBag.UserTheme';
+        const savedTheme = serverTheme || localStorage.getItem('theme') || 'light';
+        localStorage.setItem('theme', savedTheme); // Sync localStorage with server
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+    </script>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -22,6 +32,9 @@
                 <i class="fas fa-book"></i>
                 <span>Library</span>
             </div>
+            <button class="toggle-sidebar-btn" onclick="toggleSidebar()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -29,10 +42,27 @@
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/books" class="nav-item" id="nav-books">
-                <i class="fas fa-book"></i>
-                <span>Books</span>
-            </a>
+            <div class="nav-item-with-submenu">
+                <a href="/books" class="nav-item" id="nav-books">
+                    <i class="fas fa-book"></i>
+                    <span>Books</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu">
+                    <a href="#" class="submenu-item active" onclick="filterBooksByType('all', this); return false;">
+                        <i class="fas fa-list"></i>
+                        <span>All Books</span>
+                    </a>
+                    <a href="#" class="submenu-item" onclick="filterBooksByType('physical', this); return false;">
+                        <i class="fas fa-book"></i>
+                        <span>Physical Books</span>
+                    </a>
+                    <a href="#" class="submenu-item" onclick="filterBooksByType('digital', this); return false;">
+                        <i class="fas fa-tablet-alt"></i>
+                        <span>Digital Books</span>
+                    </a>
+                </div>
+            </div>
             <a href="/authors" class="nav-item" id="nav-authors">
                 <i class="fas fa-user-edit"></i>
                 <span>Authors</span>
@@ -61,7 +91,7 @@
                     <p class="user-role">Book Lover</p>
                 </div>
             </div>
-            <form action="@Url.Action("Logout", "Account")" method="post" class="logout-form">
+            <form action="/account/logout" method="post" class="logout-form">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn-logout-sidebar" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
@@ -77,11 +107,6 @@
 
     <!-- Sidebar Overlay (for mobile) -->
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar Toggle Button (floating, bottom-left) -->
-    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Show sidebar">
-        <i class="fas fa-bars"></i>
-    </button>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -111,7 +136,7 @@
                 <div class="stat-content">
                     <p class="stat-label">Total Books</p>
                     <h2 class="stat-value" id="totalBooks">@(Model?.Count ?? 0)</h2>
-                    <p class="stat-change positive">In your collection</p>
+                    <p class="stat-change positive">In your library</p>
                 </div>
             </div>
 
@@ -175,13 +200,15 @@
                                oninput="this.setCustomValidity('')">
                     </div>
                     <div class="form-group">
-                        <label for="bookAuthor">
-                            <i class="fas fa-user-edit"></i> Author
+                        <label for="bookAuthors">
+                            <i class="fas fa-user-edit"></i> Authors
+                            <button type="button" class="btn-add-inline" onclick="openAddAuthorModal()" title="Add new author">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </label>
-                        <input type="text" id="bookAuthor" name="bookAuthor" required
-                               placeholder="e.g., F. Scott Fitzgerald"
-                               oninvalid="this.setCustomValidity('Please fill in this field')"
-                               oninput="this.setCustomValidity('')">
+                        <select id="bookAuthors" name="bookAuthors" multiple="multiple" style="width: 100%;">
+                        </select>
+                        <div id="selectedAuthorsBadges" class="selected-authors-badges"></div>
                     </div>
                     <div class="form-group">
                         <label for="bookGenre">
@@ -224,6 +251,7 @@
                             <option value="not-read">Want to Read</option>
                             <option value="reading">Currently Reading</option>
                             <option value="read">Finished</option>
+                            <option value="abandoned">Abandoned</option>
                         </select>
                     </div>
                 </div>
@@ -281,14 +309,25 @@
                             @foreach (var book in Model)
                             {
                                 var statusClass = book.Status == "read" ? "status-read" :
-                                book.Status == "reading" ? "status-reading" : "status-not-read";
+                                                 book.Status == "reading" ? "status-reading" :
+                                                 book.Status == "abandoned" ? "status-abandoned" : "status-not-read";
                                 var statusText = book.Status == "read" ? "Finished" :
-                                book.Status == "reading" ? "Reading" : "Want to Read";
+                                                book.Status == "reading" ? "Reading" :
+                                                book.Status == "abandoned" ? "Abandoned" : "Want to Read";
                                 var typeClass = book.Type == "physical" ? "type-physical" : "type-digital";
                                 var typeText = book.Type == "physical" ? "Physical" : "E-Book";
-                                <tr data-id="@book.Id">
+                                <tr data-id="@book.Id" data-type="@book.Type">
                                     <td class="book-title">@book.Title</td>
-                                    <td>@book.Author</td>
+                                    <td>
+                                        @if (book.Authors != null && book.Authors.Any())
+                                        {
+                                            @string.Join(", ", book.Authors.Select(a => a.Name))
+                                        }
+                                        else
+                                        {
+                                            @book.Author
+                                        }
+                                    </td>
                                     <td>@book.Genre</td>
                                     <td>@book.Pages</td>
                                     <td><span class="badge badge-type @typeClass">@typeText</span></td>
@@ -470,8 +509,51 @@
                 <p>Settings options will be available here.</p>
             </div>
         </div>
+
+        <!-- Add Author Modal (for Books form) -->
+        <div id="addAuthorModalInBook" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Author</h3>
+                    <button type="button" class="btn-close" onclick="closeAddAuthorModalInBook()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="formAddAuthorInBook">
+                    <div class="form-group">
+                        <label for="modalBookAuthorName">
+                            <i class="fas fa-user"></i> Author Name
+                        </label>
+                        <input type="text" id="modalBookAuthorName" required placeholder="e.g., J.K. Rowling">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalBookAuthorNationality">
+                            <i class="fas fa-globe"></i> Nationality
+                        </label>
+                        <input type="text" id="modalBookAuthorNationality" placeholder="e.g., British">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalBookAuthorBio">
+                            <i class="fas fa-info-circle"></i> Biography
+                        </label>
+                        <textarea id="modalBookAuthorBio" rows="3" placeholder="Brief biography..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Add Author
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="closeAddAuthorModalInBook()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="~/js/books.js"></script>
 </body>
 </html>

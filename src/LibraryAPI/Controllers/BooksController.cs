@@ -98,5 +98,53 @@ namespace LibraryAPI.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Add an author to a book
+        /// </summary>
+        [HttpPost("{bookId}/authors/{authorId}")]
+        public async Task<ActionResult> AddAuthor(int userId, int bookId, int authorId)
+        {
+            var result = await _bookService.AddAuthorToBookAsync(bookId, authorId, userId);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Error adding author to book or author already exists" });
+            }
+
+            return Ok(new { message = "Author added to book successfully" });
+        }
+
+        /// <summary>
+        /// Remove an author from a book
+        /// </summary>
+        [HttpDelete("{bookId}/authors/{authorId}")]
+        public async Task<ActionResult> RemoveAuthor(int userId, int bookId, int authorId)
+        {
+            var result = await _bookService.RemoveAuthorFromBookAsync(bookId, authorId, userId);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Author not found in book" });
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Get all authors of a book
+        /// </summary>
+        [HttpGet("{bookId}/authors")]
+        public async Task<ActionResult> GetBookAuthors(int userId, int bookId)
+        {
+            var authors = await _bookService.GetBookAuthorsAsync(bookId, userId);
+
+            if (authors == null)
+            {
+                return NotFound(new { message = "Book not found" });
+            }
+
+            return Ok(authors);
+        }
     }
 }

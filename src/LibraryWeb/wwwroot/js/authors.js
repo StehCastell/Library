@@ -1,9 +1,48 @@
 // ===== AUTHORS PAGE SCRIPT =====
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
     loadAuthors();
     initializeAuthorForm();
 });
+
+// ===== THEME MANAGEMENT =====
+async function changeTheme() {
+    const currentTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+    applyTheme(currentTheme);
+    localStorage.setItem('theme', currentTheme);
+
+    // Save to database
+    try {
+        const response = await fetch('/books/UpdateTheme', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ theme: currentTheme })
+        });
+
+        if (!response.ok) {
+            console.error('Failed to save theme to database');
+        }
+    } catch (error) {
+        console.error('Error saving theme:', error);
+    }
+}
+
+function applyTheme(theme) {
+    const themeIcon = document.querySelector('.theme-toggle-btn i');
+    if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+    } else {
+        document.body.classList.remove('dark-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+    }
+}
 
 // ===== SIDEBAR TOGGLE =====
 function toggleSidebar() {
@@ -77,10 +116,12 @@ function resetAuthorForm() {
 
 async function loadAuthors() {
     try {
-        const response = await fetch('/Authors/GetAll');
+        const response = await fetch('/authors/getall');
         if (response.ok) {
             const authors = await response.json();
             displayAuthors(authors);
+        } else {
+            console.error('Failed to load authors:', response.status, response.statusText);
         }
     } catch (error) {
         console.error('Error loading authors:', error);
@@ -143,7 +184,7 @@ function displayAuthors(authors) {
 
 async function addAuthor(authorData) {
     try {
-        const response = await fetch('/Authors/Create', {
+        const response = await fetch('/authors/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -172,7 +213,7 @@ async function addAuthor(authorData) {
 
 async function updateAuthor(id, authorData) {
     try {
-        const response = await fetch(`/Authors/Update/${id}`, {
+        const response = await fetch(`/authors/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -201,7 +242,7 @@ async function updateAuthor(id, authorData) {
 
 async function editAuthor(id) {
     try {
-        const response = await fetch(`/Authors/Get/${id}`);
+        const response = await fetch(`/authors/get/${id}`);
 
         if (response.ok) {
             const author = await response.json();
@@ -231,7 +272,7 @@ async function deleteAuthor(id) {
     }
 
     try {
-        const response = await fetch(`/Authors/Delete/${id}`, {
+        const response = await fetch(`/authors/delete/${id}`, {
             method: 'DELETE'
         });
 

@@ -7,5 +7,6 @@ namespace LibraryAPI.Services
         Task<UserResponseDto?> RegisterAsync(UserRegisterDto registerDto);
         Task<UserResponseDto?> LoginAsync(UserLoginDto loginDto);
         Task<UserResponseDto?> GetByIdAsync(int id);
+        Task<bool> UpdateThemeAsync(int userId, string theme);
     }
 }

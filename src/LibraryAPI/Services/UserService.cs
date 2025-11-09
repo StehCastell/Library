@@ -38,7 +38,8 @@ namespace LibraryAPI.Services
                 Id = userCriado.Id,
                 Name = userCriado.Name,
                 Email = userCriado.Email,
-                CreatedAt = userCriado.CreatedAt
+                CreatedAt = userCriado.CreatedAt,
+                Theme = userCriado.Theme
             };
         }
 
@@ -62,7 +63,8 @@ namespace LibraryAPI.Services
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                Theme = user.Theme
             };
         }
 
@@ -80,8 +82,23 @@ namespace LibraryAPI.Services
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                Theme = user.Theme
             };
+        }
+
+        public async Task<bool> UpdateThemeAsync(int userId, string theme)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.Theme = theme;
+            await _userRepository.UpdateAsync(user);
+            return true;
         }
     }
 }

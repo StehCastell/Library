@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryWeb.Controllers
 {
+    [Route("[controller]")]
     public class BooksController : Controller
     {
         private readonly IApiService _apiService;
@@ -25,6 +26,8 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Books
+        [HttpGet("")]
+        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
             if (!IsLoggedIn())
@@ -41,13 +44,21 @@ namespace LibraryWeb.Controllers
                 books = new List<Book>();
             }
 
+            // Carregar autores para cada livro
+            foreach (var book in books)
+            {
+                book.Authors = await _apiService.GetBookAuthorsAsync(book.Id, userId);
+            }
+
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserId = userId;
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
 
             return View(books);
         }
 
         // POST: Books/Create
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] Book book)
         {
             try
@@ -121,7 +132,7 @@ namespace LibraryWeb.Controllers
         }
 
         // PUT: Books/Update/5
-        [HttpPut]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Book book)
         {
             if (!IsLoggedIn())
@@ -145,7 +156,7 @@ namespace LibraryWeb.Controllers
         }
 
         // DELETE: Books/Delete/5
-        [HttpDelete]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             if (!IsLoggedIn())
@@ -165,7 +176,7 @@ namespace LibraryWeb.Controllers
         }
 
         // GET: Books/Get/5
-        [HttpGet]
+        [HttpGet("Get/{id}")]
         public async Task<IActionResult> Get(int id)
         {
             if (!IsLoggedIn())
@@ -181,7 +192,93 @@ namespace LibraryWeb.Controllers
                 return NotFound();
             }
 
+            // Carregar autores do livro
+            book.Authors = await _apiService.GetBookAuthorsAsync(book.Id, userId);
+
             return Ok(book);
         }
+
+        // GET: Books/GetAll
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll()
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var books = await _apiService.GetBooksAsync(userId);
+
+            return Ok(books ?? new List<Book>());
+        }
+
+        // POST: Books/AddAuthor/5/10
+        [HttpPost("AddAuthor/{bookId}/{authorId}")]
+        public async Task<IActionResult> AddAuthor(int bookId, int authorId)
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var result = await _apiService.AddAuthorToBookAsync(userId, bookId, authorId);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Error adding author to book" });
+            }
+
+            return Ok(new { message = "Author added to book successfully" });
+        }
+
+        // DELETE: Books/RemoveAuthor/5/10
+        [HttpDelete("RemoveAuthor/{bookId}/{authorId}")]
+        public async Task<IActionResult> RemoveAuthor(int bookId, int authorId)
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var result = await _apiService.RemoveAuthorFromBookAsync(userId, bookId, authorId);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Author not found in book" });
+            }
+
+            return Ok(new { message = "Author removed from book successfully" });
+        }
+
+        // PUT: Books/UpdateTheme
+        [HttpPut("UpdateTheme")]
+        public async Task<IActionResult> UpdateTheme([FromBody] ThemeUpdateRequest request)
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var result = await _apiService.UpdateUserThemeAsync(userId, request.Theme);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Error updating theme" });
+            }
+
+            // Update session
+            HttpContext.Session.SetString("UserTheme", request.Theme);
+
+            return Ok(new { message = "Theme updated successfully" });
+        }
+    }
+
+    public class ThemeUpdateRequest
+    {
+        public string Theme { get; set; } = string.Empty;
     }
 }

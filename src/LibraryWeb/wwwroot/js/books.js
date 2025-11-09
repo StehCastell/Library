@@ -1,7 +1,8 @@
 // ===== THEME MANAGEMENT =====
+let allAuthors = [];
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Force light theme as default (remove old saved theme)
-    localStorage.removeItem('theme');
+    // Load saved theme or default to light
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
 
@@ -13,12 +14,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Update stats
     updateStats();
+
+    // Load authors for select
+    loadAuthorsForSelect();
+
+    // Initialize modal for adding authors
+    initializeAuthorModal();
 });
 
-function changeTheme() {
+async function changeTheme() {
     const currentTheme = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
     applyTheme(currentTheme);
     localStorage.setItem('theme', currentTheme);
+
+    // Save to database
+    try {
+        const response = await fetch('/books/UpdateTheme', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ theme: currentTheme })
+        });
+
+        if (!response.ok) {
+            console.error('Failed to save theme to database');
+        }
+    } catch (error) {
+        console.error('Error saving theme:', error);
+    }
 }
 
 function applyTheme(theme) {
@@ -36,10 +60,35 @@ function applyTheme(theme) {
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
+    const mainContent = document.querySelector('.main-content');
+    const toggleBtn = document.querySelector('.toggle-sidebar-btn i');
 
-    if (sidebar && overlay) {
+    if (sidebar) {
+        // Toggle classes for both mobile and desktop
         sidebar.classList.toggle('mobile-visible');
-        overlay.classList.toggle('active');
+        sidebar.classList.toggle('collapsed');
+
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+
+        // Adjust main content margin for desktop
+        if (mainContent) {
+            if (sidebar.classList.contains('collapsed')) {
+                mainContent.style.marginLeft = '80px';
+            } else {
+                mainContent.style.marginLeft = '280px';
+            }
+        }
+
+        // Change toggle button icon
+        if (toggleBtn) {
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.className = 'fas fa-chevron-right';
+            } else {
+                toggleBtn.className = 'fas fa-chevron-left';
+            }
+        }
     }
 }
 
@@ -59,21 +108,23 @@ function initializeNavigation() {
         });
     }
 
-    if (navAuthors) {
-        navAuthors.addEventListener('click', function(e) {
-            e.preventDefault();
-            showSection('authors');
-            setActiveNav(this);
-        });
-    }
+    // Authors navigation - allow default behavior to navigate to Authors page
+    // if (navAuthors) {
+    //     navAuthors.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         showSection('authors');
+    //         setActiveNav(this);
+    //     });
+    // }
 
-    if (navCollections) {
-        navCollections.addEventListener('click', function(e) {
-            e.preventDefault();
-            showSection('collections');
-            setActiveNav(this);
-        });
-    }
+    // Collections navigation - allow default behavior to navigate to Collections page
+    // if (navCollections) {
+    //     navCollections.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         showSection('collections');
+    //         setActiveNav(this);
+    //     });
+    // }
 
     if (navStatistics) {
         navStatistics.addEventListener('click', function(e) {
@@ -150,13 +201,20 @@ function filterBooks(searchTerm) {
 
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
-        if (text.includes(searchTerm)) {
+        const bookType = row.getAttribute('data-type');
+        const matchesSearch = !searchTerm || text.includes(searchTerm);
+        const matchesType = currentBookTypeFilter === 'all' || bookType === currentBookTypeFilter;
+
+        if (matchesSearch && matchesType) {
             row.style.display = '';
             visibleCount++;
         } else {
             row.style.display = 'none';
         }
     });
+
+    // Update stats based on filtered books
+    updateStats();
 
     // Show/hide empty state
     const tableContainer = document.getElementById('booksTableContainer');
@@ -178,20 +236,79 @@ function filterBooks(searchTerm) {
     }
 }
 
+// ===== FILTER BY BOOK TYPE =====
+let currentBookTypeFilter = 'all';
+
+function filterBooksByType(type, clickedElement) {
+    currentBookTypeFilter = type;
+    const rows = document.querySelectorAll('.modern-table tbody tr');
+    const searchInput = document.getElementById('searchInput');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const bookType = row.getAttribute('data-type');
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const matchesSearch = !searchTerm || row.textContent.toLowerCase().includes(searchTerm);
+        const matchesType = type === 'all' || bookType === type;
+
+        if (matchesSearch && matchesType) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update active state for submenu items
+    document.querySelectorAll('.submenu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    if (clickedElement) {
+        clickedElement.classList.add('active');
+    }
+
+    // Update stats based on filtered books
+    updateStats();
+
+    // Show/hide empty state
+    const tableContainer = document.getElementById('booksTableContainer');
+    if (visibleCount === 0) {
+        if (!document.querySelector('.filter-empty-state')) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state filter-empty-state';
+            const typeLabel = type === 'physical' ? 'physical books' : type === 'digital' ? 'digital books' : 'books';
+            emptyState.innerHTML = `
+                <i class="fas fa-filter empty-icon"></i>
+                <h3>No ${typeLabel} found</h3>
+                <p>Try selecting a different filter</p>
+            `;
+            tableContainer.appendChild(emptyState);
+        }
+        document.querySelector('.modern-table')?.style.setProperty('display', 'none');
+    } else {
+        document.querySelector('.filter-empty-state')?.remove();
+        document.querySelector('.modern-table')?.style.removeProperty('display');
+    }
+}
+
 // ===== STATS UPDATE =====
 function updateStats() {
     const rows = document.querySelectorAll('.modern-table tbody tr');
-    const totalBooks = rows.length;
+    let totalBooks = 0;
     let booksRead = 0;
     let booksReading = 0;
     let booksNotRead = 0;
 
     rows.forEach(row => {
-        const statusBadge = row.querySelector('.badge-status');
-        if (statusBadge) {
-            if (statusBadge.classList.contains('status-read')) booksRead++;
-            else if (statusBadge.classList.contains('status-reading')) booksReading++;
-            else if (statusBadge.classList.contains('status-not-read')) booksNotRead++;
+        // Only count visible rows
+        if (row.style.display !== 'none') {
+            totalBooks++;
+            const statusBadge = row.querySelector('.badge-status');
+            if (statusBadge) {
+                if (statusBadge.classList.contains('status-read')) booksRead++;
+                else if (statusBadge.classList.contains('status-reading')) booksReading++;
+                else if (statusBadge.classList.contains('status-not-read')) booksNotRead++;
+            }
         }
     });
 
@@ -284,7 +401,7 @@ function resetAuthorForm() {
 
 async function loadAuthors() {
     try {
-        const response = await fetch('/Authors/GetAll');
+        const response = await fetch('/authors/getall');
         if (response.ok) {
             const authors = await response.json();
             displayAuthors(authors);
@@ -352,7 +469,7 @@ function displayAuthors(authors) {
 
 async function addAuthor(authorData) {
     try {
-        const response = await fetch('/Authors/Create', {
+        const response = await fetch('/authors/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -381,7 +498,7 @@ async function addAuthor(authorData) {
 
 async function updateAuthor(id, authorData) {
     try {
-        const response = await fetch(`/Authors/Update/${id}`, {
+        const response = await fetch(`/authors/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -410,7 +527,7 @@ async function updateAuthor(id, authorData) {
 
 async function editAuthor(id) {
     try {
-        const response = await fetch(`/Authors/Get/${id}`);
+        const response = await fetch(`/authors/get/${id}`);
 
         if (response.ok) {
             const author = await response.json();
@@ -440,7 +557,7 @@ async function deleteAuthor(id) {
     }
 
     try {
-        const response = await fetch(`/Authors/Delete/${id}`, {
+        const response = await fetch(`/authors/delete/${id}`, {
             method: 'DELETE'
         });
 
@@ -511,7 +628,7 @@ function resetCollectionForm() {
 
 async function loadCollections() {
     try {
-        const response = await fetch('/Collections/GetAll');
+        const response = await fetch('/collections/getall');
         if (response.ok) {
             const collections = await response.json();
             displayCollections(collections);
@@ -567,7 +684,7 @@ function displayCollections(collections) {
 
 async function addCollection(collectionData) {
     try {
-        const response = await fetch('/Collections/Create', {
+        const response = await fetch('/collections/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -596,7 +713,7 @@ async function addCollection(collectionData) {
 
 async function updateCollection(id, collectionData) {
     try {
-        const response = await fetch(`/Collections/Update/${id}`, {
+        const response = await fetch(`/collections/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -625,7 +742,7 @@ async function updateCollection(id, collectionData) {
 
 async function editCollection(id) {
     try {
-        const response = await fetch(`/Collections/Get/${id}`);
+        const response = await fetch(`/collections/get/${id}`);
 
         if (response.ok) {
             const collection = await response.json();
@@ -654,7 +771,7 @@ async function deleteCollection(id) {
     }
 
     try {
-        const response = await fetch(`/Collections/Delete/${id}`, {
+        const response = await fetch(`/collections/delete/${id}`, {
             method: 'DELETE'
         });
 
@@ -753,9 +870,15 @@ if (formCollection) {
 }
 
 function getFormData() {
+    // Get first selected author name or empty string for backward compatibility
+    const selectedAuthors = $('#bookAuthors').val() || [];
+    const firstAuthorId = selectedAuthors.length > 0 ? selectedAuthors[0] : null;
+    const firstAuthorName = firstAuthorId ?
+        (allAuthors.find(a => a.id == firstAuthorId)?.name || '') : '';
+
     return {
         title: document.getElementById('bookTitle').value.trim(),
-        author: document.getElementById('bookAuthor').value.trim(),
+        author: firstAuthorName || 'Multiple Authors',
         genre: document.getElementById('bookGenre').value.trim(),
         pages: parseInt(document.getElementById('bookPages').value),
         type: document.getElementById('bookType').value,
@@ -764,12 +887,15 @@ function getFormData() {
 }
 
 function validateBookData(book) {
+    // Authors are optional in the basic book data since we manage them separately
+    const selectedAuthors = $('#bookAuthors').val() || [];
+
     return book.title &&
-        book.author &&
         book.genre &&
         book.pages > 0 &&
         book.type &&
-        book.status;
+        book.status &&
+        selectedAuthors.length > 0;
 }
 
 // ===== API FUNCTIONS =====
@@ -777,7 +903,7 @@ async function addBook(bookData) {
     console.log('Adding book:', bookData);
 
     try {
-        const response = await fetch('/Books/Create', {
+        const response = await fetch('/books/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -790,6 +916,15 @@ async function addBook(bookData) {
         if (response.ok) {
             const result = await response.json();
             console.log('Book added successfully:', result);
+
+            // Get selected authors and add them to the book
+            const selectedAuthors = $('#bookAuthors').val() || [];
+            for (const authorId of selectedAuthors) {
+                await fetch(`/books/addauthor/${result.id}/${authorId}`, {
+                    method: 'POST'
+                });
+            }
+
             showMessage('bookMessage', 'Book added successfully!', 'success');
             resetForm();
 
@@ -810,7 +945,7 @@ async function updateBook(id, bookData) {
     console.log('Updating book ID:', id, 'with data:', bookData);
 
     try {
-        const response = await fetch(`/Books/Update/${id}`, {
+        const response = await fetch(`/books/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -823,6 +958,27 @@ async function updateBook(id, bookData) {
         if (response.ok) {
             const result = await response.json();
             console.log('Book updated successfully:', result);
+
+            // Get current and selected authors
+            const selectedAuthors = $('#bookAuthors').val() || [];
+            const originalAuthors = window.currentBookAuthors || [];
+
+            // Remove authors that are no longer selected
+            for (const authorId of originalAuthors) {
+                if (!selectedAuthors.includes(authorId.toString())) {
+                    await fetch(`/books/removeauthor/${id}/${authorId}`, {
+                        method: 'DELETE'
+                    });
+                }
+            }
+
+            // Add newly selected authors
+            for (const authorId of selectedAuthors) {
+                await fetch(`/books/addauthor/${id}/${authorId}`, {
+                    method: 'POST'
+                });
+            }
+
             showMessage('bookMessage', 'Book updated successfully!', 'success');
             resetForm();
 
@@ -843,7 +999,7 @@ async function editBook(id) {
     console.log('Loading book for edit, ID:', id);
 
     try {
-        const response = await fetch(`/Books/Get/${id}`);
+        const response = await fetch(`/books/get/${id}`);
 
         if (response.ok) {
             const book = await response.json();
@@ -851,11 +1007,22 @@ async function editBook(id) {
 
             document.getElementById('editBookId').value = book.id;
             document.getElementById('bookTitle').value = book.title;
-            document.getElementById('bookAuthor').value = book.author;
             document.getElementById('bookGenre').value = book.genre;
             document.getElementById('bookPages').value = book.pages;
             document.getElementById('bookType').value = book.type;
             document.getElementById('bookStatus').value = book.status;
+
+            // Load and select book authors
+            if (book.authors && book.authors.length > 0) {
+                const authorIds = book.authors.map(a => a.id);
+                console.log('Setting authors:', authorIds);
+                // Store original authors for comparison during update
+                window.currentBookAuthors = authorIds;
+                $('#bookAuthors').val(authorIds).trigger('change');
+            } else {
+                window.currentBookAuthors = [];
+                $('#bookAuthors').val(null).trigger('change');
+            }
 
             document.getElementById('formTitle').textContent = 'Edit Book';
             const submitBtn = document.getElementById('btnSubmitBook');
@@ -883,7 +1050,7 @@ async function deleteBook(id) {
     console.log('Deleting book ID:', id);
 
     try {
-        const response = await fetch(`/Books/Delete/${id}`, {
+        const response = await fetch(`/books/delete/${id}`, {
             method: 'DELETE'
         });
 
@@ -945,6 +1112,9 @@ function resetForm() {
         document.getElementById('formTitle').textContent = 'Add New Book';
         const submitBtn = document.getElementById('btnSubmitBook');
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Book';
+        // Clear stored authors
+        window.currentBookAuthors = [];
+        $('#bookAuthors').val(null).trigger('change');
     }
 }
 
@@ -965,5 +1135,128 @@ function clearMessage(elementId) {
     const element = document.getElementById(elementId);
     if (element) {
         element.innerHTML = '';
+    }
+}
+
+// ===== AUTHORS MANAGEMENT FOR BOOKS =====
+
+async function loadAuthorsForSelect() {
+    try {
+        const response = await fetch('/authors/getall');
+        if (response.ok) {
+            allAuthors = await response.json();
+            initializeAuthorSelect();
+        }
+    } catch (error) {
+        console.error('Error loading authors:', error);
+    }
+}
+
+function initializeAuthorSelect() {
+    const sortedAuthors = [...allAuthors].sort((a, b) => a.name.localeCompare(b.name));
+    const select = $('#bookAuthors');
+
+    if (select.hasClass("select2-hidden-accessible")) {
+        select.select2('destroy');
+    }
+
+    select.empty();
+
+    sortedAuthors.forEach(author => {
+        const option = new Option(author.name, author.id, false, false);
+        select.append(option);
+    });
+
+    select.select2({
+        placeholder: 'Select authors...',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Update badges when selection changes
+    select.on('change', function () {
+        updateAuthorBadges();
+    });
+}
+
+function updateAuthorBadges() {
+    const selectedIds = $('#bookAuthors').val() || [];
+    const badgesContainer = document.getElementById('selectedAuthorsBadges');
+
+    if (!badgesContainer) return;
+
+    badgesContainer.innerHTML = '';
+
+    selectedIds.forEach(authorId => {
+        const author = allAuthors.find(a => a.id == authorId);
+        if (author) {
+            const badge = document.createElement('div');
+            badge.className = 'author-badge';
+            badge.innerHTML = `
+                <span>${author.name}</span>
+                <span class="author-badge-remove" onclick="removeAuthorBadge(${authorId})">×</span>
+            `;
+            badgesContainer.appendChild(badge);
+        }
+    });
+}
+
+function removeAuthorBadge(authorId) {
+    const select = $('#bookAuthors');
+    let selectedIds = select.val() || [];
+    selectedIds = selectedIds.filter(id => id != authorId);
+    select.val(selectedIds).trigger('change');
+}
+
+function initializeAuthorModal() {
+    const formAddAuthor = document.getElementById('formAddAuthorInBook');
+    if (formAddAuthor) {
+        formAddAuthor.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleAddAuthorFromModal();
+        });
+    }
+}
+
+function openAddAuthorModal() {
+    document.getElementById('addAuthorModalInBook').style.display = 'block';
+}
+
+function closeAddAuthorModalInBook() {
+    document.getElementById('addAuthorModalInBook').style.display = 'none';
+    document.getElementById('formAddAuthorInBook').reset();
+}
+
+async function handleAddAuthorFromModal() {
+    const authorData = {
+        name: document.getElementById('modalBookAuthorName').value,
+        nationality: document.getElementById('modalBookAuthorNationality').value || null,
+        bio: document.getElementById('modalBookAuthorBio').value || null
+    };
+
+    try {
+        const response = await fetch('/authors/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(authorData)
+        });
+
+        if (response.ok) {
+            const newAuthor = await response.json();
+            closeAddAuthorModalInBook();
+
+            await loadAuthorsForSelect();
+
+            $('#bookAuthors').val([...($('#bookAuthors').val() || []), newAuthor.id]).trigger('change');
+
+            showMessage('bookMessage', 'Author added successfully!', 'success');
+        } else {
+            alert('Error adding author');
+        }
+    } catch (error) {
+        console.error('Error adding author:', error);
+        alert('Error adding author: ' + error.message);
     }
 }

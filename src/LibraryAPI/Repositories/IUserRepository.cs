@@ -9,5 +9,6 @@ namespace LibraryAPI.Repositories
         Task<bool> EmailExistsAsync(string email);
         Task<User> CreateAsync(User user);
         Task<IEnumerable<User>> GetAllAsync();
+        Task<User> UpdateAsync(User user);
     }
 }
