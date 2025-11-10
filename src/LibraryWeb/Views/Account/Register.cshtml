@@ -12,53 +12,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Library System</title>
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
-<body>
-    <div class="container">
-        <h1>📚 Personal Library System</h1>
-
-        @if (ViewData.ModelState.Count > 0 && !ViewData.ModelState.IsValid)
-        {
-            <div class="error-message">
-                @Html.ValidationSummary(false)
-            </div>
+<body class="auth-page">
+    <script>
+        // Apply saved theme immediately
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
         }
+    </script>
 
-        <div class="form-container">
-            <h2>Register</h2>
+    <!-- Theme Toggle Button -->
+    <button class="auth-theme-toggle" onclick="toggleAuthTheme()" title="Toggle theme">
+        <i class="fas fa-moon" id="auth-theme-icon"></i>
+    </button>
 
-            <form asp-controller="account" asp-action="register" method="post">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h1>Create Account</h1>
+                <p>Start organizing your reading journey</p>
+            </div>
+
+            @if (ViewData.ModelState.Count > 0 && !ViewData.ModelState.IsValid)
+            {
+                <div class="auth-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    @Html.ValidationSummary(false, "", new { @class = "error-list" })
+                </div>
+            }
+
+            <form asp-controller="Account" asp-action="Register" method="post" class="auth-form">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="form-group">
-                    <label asp-for="Name" class="control-label">Name</label>
-                    <input name="Name" asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+
+                <div class="form-group-auth">
+                    <label asp-for="Name">
+                        <i class="fas fa-user"></i>
+                        Full Name
+                    </label>
+                    <input asp-for="Name"
+                           type="text"
+                           class="form-input-auth"
+                           placeholder="John Doe"
+                           autocomplete="name" />
+                    <span asp-validation-for="Name" class="validation-error"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Email" class="control-label">Email</label>
-                    <input name="Email" asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+
+                <div class="form-group-auth">
+                    <label asp-for="Email">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                    </label>
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-input-auth"
+                           placeholder="your.email@example.com"
+                           autocomplete="email" />
+                    <span asp-validation-for="Email" class="validation-error"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Password" class="control-label">Password</label>
-                    <input name="Password" asp-for="Password" class="form-control" type="password" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
+
+                <div class="form-group-auth">
+                    <label asp-for="Password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <div class="password-input-wrapper">
+                        <input asp-for="Password"
+                               type="password"
+                               id="password"
+                               class="form-input-auth"
+                               placeholder="Create a strong password"
+                               autocomplete="new-password" />
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="validation-error"></span>
+                    <p class="password-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Use at least 8 characters with a mix of letters and numbers
+                    </p>
                 </div>
-                <div class="form-group">
-                    <input type="submit" value="Register" class="btn btn-primary" />
-                </div>
+
+                <button type="submit" class="btn-auth-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
             </form>
 
-            <div class="toggle-form">
-                <a href="/account/login">Already have an account? Login</a>
+            <div class="auth-divider">
+                <span>Already have an account?</span>
             </div>
+
+            <a href="/Account/Login" class="btn-auth-secondary">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </a>
+        </div>
+
+        <div class="auth-footer">
+            <p>&copy; 2025 Personal Library System. Organize your reading journey.</p>
         </div>
     </div>
 
-    <!-- Validation Scripts - Fixed to work without Layout -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        // Update theme icon on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const icon = document.getElementById('auth-theme-icon');
+            if (icon) {
+                icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        });
+
+        function toggleAuthTheme() {
+            const body = document.body;
+            const icon = document.getElementById('auth-theme-icon');
+
+            body.classList.toggle('dark-theme');
+
+            const newTheme = body.classList.contains('dark-theme') ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+
+            if (icon) {
+                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.getElementById('password-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+    </script>
 </body>
 </html>
