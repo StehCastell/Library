@@ -65,7 +65,8 @@ function initializeAuthorForm() {
             const authorData = {
                 name: document.getElementById('authorName').value,
                 nationality: document.getElementById('authorNationality').value || null,
-                bio: document.getElementById('authorBio').value || null
+                bio: document.getElementById('authorBio').value || null,
+                profileImage: currentAuthorProfileImageBase64
             };
 
             if (authorId) {
@@ -111,6 +112,9 @@ function resetAuthorForm() {
         document.getElementById('authorFormTitle').textContent = 'Add New Author';
         const submitBtn = document.getElementById('btnSubmitAuthor');
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Author';
+
+        // Clear image
+        removeAuthorImage();
     }
 }
 
@@ -149,7 +153,7 @@ function displayAuthors(authors) {
         <table class="modern-table">
             <thead>
                 <tr>
-                    <th>NAME</th>
+                    <th>AUTHOR</th>
                     <th>NATIONALITY</th>
                     <th>ACTIONS</th>
                 </tr>
@@ -158,9 +162,18 @@ function displayAuthors(authors) {
     `;
 
     authors.forEach(author => {
+        const profileImageHtml = author.profileImage
+            ? `<img src="${author.profileImage}" alt="${author.name}" class="author-profile-thumbnail">`
+            : `<div class="author-profile-placeholder"><i class="fas fa-user"></i></div>`;
+
         tableHtml += `
             <tr data-id="${author.id}">
-                <td class="book-title">${author.name}</td>
+                <td class="book-title">
+                    <div class="author-name-cell">
+                        ${profileImageHtml}
+                        <span>${author.name}</span>
+                    </div>
+                </td>
                 <td>${author.nationality || '-'}</td>
                 <td class="actions">
                     <button class="btn-icon btn-icon-edit" onclick="editAuthor(${author.id})" title="Edit author">
@@ -252,6 +265,22 @@ async function editAuthor(id) {
             document.getElementById('authorNationality').value = author.nationality || '';
             document.getElementById('authorBio').value = author.bio || '';
 
+            // Load profile image if exists
+            if (author.profileImage) {
+                currentAuthorProfileImageBase64 = author.profileImage;
+                const preview = document.getElementById('authorImagePreview');
+                const previewContainer = document.getElementById('authorImagePreviewContainer');
+                const placeholder = document.getElementById('authorImageUploadPlaceholder');
+
+                if (preview && previewContainer && placeholder) {
+                    preview.src = author.profileImage;
+                    previewContainer.style.display = 'flex';
+                    placeholder.style.display = 'none';
+                }
+            } else {
+                removeAuthorImage();
+            }
+
             document.getElementById('authorFormTitle').textContent = 'Edit Author';
             const submitBtn = document.getElementById('btnSubmitAuthor');
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Author';
@@ -327,4 +356,62 @@ async function getErrorMessage(response) {
     } catch {
         return 'An error occurred';
     }
+}
+
+// ===== IMAGE HANDLING =====
+
+let currentAuthorProfileImageBase64 = null;
+
+function handleAuthorImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        showMessage('authorMessage', 'Please select a valid image file (JPG, JPEG, or PNG)', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+        showMessage('authorMessage', 'Image size must be less than 5MB', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Read and convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64String = e.target.result;
+        currentAuthorProfileImageBase64 = base64String;
+
+        // Show preview
+        const preview = document.getElementById('authorImagePreview');
+        const previewContainer = document.getElementById('authorImagePreviewContainer');
+        const placeholder = document.getElementById('authorImageUploadPlaceholder');
+
+        if (preview && previewContainer && placeholder) {
+            preview.src = base64String;
+            previewContainer.style.display = 'flex';
+            placeholder.style.display = 'none';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeAuthorImage() {
+    currentAuthorProfileImageBase64 = null;
+
+    const fileInput = document.getElementById('authorProfileImage');
+    const preview = document.getElementById('authorImagePreview');
+    const previewContainer = document.getElementById('authorImagePreviewContainer');
+    const placeholder = document.getElementById('authorImageUploadPlaceholder');
+
+    if (fileInput) fileInput.value = '';
+    if (preview) preview.src = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
 }

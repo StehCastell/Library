@@ -53,9 +53,8 @@ namespace LibraryAPI.Models
         [Column("publication_year")]
         public int? PublicationYear { get; set; }
 
-        [StringLength(500)]
-        [Column("cover_image_url")]
-        public string? CoverImageUrl { get; set; }
+        [Column("cover_image")]
+        public string? CoverImage { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;

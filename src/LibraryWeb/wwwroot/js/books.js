@@ -882,7 +882,8 @@ function getFormData() {
         genre: document.getElementById('bookGenre').value.trim(),
         pages: parseInt(document.getElementById('bookPages').value),
         type: document.getElementById('bookType').value,
-        status: document.getElementById('bookStatus').value
+        status: document.getElementById('bookStatus').value,
+        coverImage: currentCoverImageBase64 || null
     };
 }
 
@@ -1012,6 +1013,20 @@ async function editBook(id) {
             document.getElementById('bookType').value = book.type;
             document.getElementById('bookStatus').value = book.status;
 
+            // Load cover image if exists
+            if (book.coverImage) {
+                currentCoverImageBase64 = book.coverImage;
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                const previewImage = document.getElementById('imagePreview');
+                const placeholder = document.getElementById('imageUploadPlaceholder');
+
+                previewImage.src = book.coverImage;
+                previewContainer.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                removeImage();
+            }
+
             // Load and select book authors
             if (book.authors && book.authors.length > 0) {
                 const authorIds = book.authors.map(a => a.id);
@@ -1115,6 +1130,8 @@ function resetForm() {
         // Clear stored authors
         window.currentBookAuthors = [];
         $('#bookAuthors').val(null).trigger('change');
+        // Clear image
+        removeImage();
     }
 }
 
@@ -1259,4 +1276,73 @@ async function handleAddAuthorFromModal() {
         console.error('Error adding author:', error);
         alert('Error adding author: ' + error.message);
     }
+}
+
+// ===== IMAGE UPLOAD FUNCTIONS =====
+let currentCoverImageBase64 = null;
+
+function handleImageSelect(event) {
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file (PNG, JPG, JPEG)');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+        alert('Image size must be less than 5MB');
+        event.target.value = '';
+        return;
+    }
+
+    // Read and convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64String = e.target.result;
+        currentCoverImageBase64 = base64String;
+
+        // Show preview
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const previewImage = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imageUploadPlaceholder');
+
+        previewImage.src = base64String;
+        previewContainer.style.display = 'block';
+        placeholder.style.display = 'none';
+    };
+
+    reader.onerror = function() {
+        alert('Error reading file');
+        event.target.value = '';
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    currentCoverImageBase64 = null;
+
+    const fileInput = document.getElementById('bookCoverImage');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const placeholder = document.getElementById('imageUploadPlaceholder');
+
+    fileInput.value = '';
+    previewContainer.style.display = 'none';
+    placeholder.style.display = 'flex';
+}
+
+// Make sure to clear the image when canceling or closing the form
+function clearBookForm() {
+    document.getElementById('formBook').reset();
+    $('#bookAuthors').val(null).trigger('change');
+    document.getElementById('editBookId').value = '';
+    removeImage();
 }

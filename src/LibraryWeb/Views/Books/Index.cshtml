@@ -256,6 +256,28 @@
                     </div>
                 </div>
 
+                <div class="form-group-full">
+                    <label for="bookCoverImage">
+                        <i class="fas fa-image"></i> Cover Image (Optional)
+                    </label>
+                    <div class="image-upload-container">
+                        <input type="file" id="bookCoverImage" name="bookCoverImage"
+                               accept="image/*" onchange="handleImageSelect(event)"
+                               class="file-input">
+                        <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+                            <img id="imagePreview" class="image-preview" alt="Book cover preview">
+                            <button type="button" class="btn-remove-image" onclick="removeImage()" title="Remove image">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="imageUploadPlaceholder" class="image-upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload or drag and drop</p>
+                            <small>PNG, JPG, JPEG (max 5MB)</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-actions">
                     <button type="submit" id="btnSubmitBook" class="btn-primary">
                         <i class="fas fa-save"></i> Save Book
@@ -296,6 +318,7 @@
                     <table class="modern-table">
                         <thead>
                             <tr>
+                                <th>COVER</th>
                                 <th>TITLE</th>
                                 <th>AUTHOR</th>
                                 <th>GENRE</th>
@@ -317,6 +340,18 @@
                                 var typeClass = book.Type == "physical" ? "type-physical" : "type-digital";
                                 var typeText = book.Type == "physical" ? "Physical" : "E-Book";
                                 <tr data-id="@book.Id" data-type="@book.Type">
+                                    <td class="book-cover-cell">
+                                        @if (!string.IsNullOrEmpty(book.CoverImage))
+                                        {
+                                            <img src="@book.CoverImage" alt="@book.Title cover" class="book-cover-thumbnail" />
+                                        }
+                                        else
+                                        {
+                                            <div class="book-cover-placeholder">
+                                                <i class="fas fa-book"></i>
+                                            </div>
+                                        }
+                                    </td>
                                     <td class="book-title">@book.Title</td>
                                     <td>
                                         @if (book.Authors != null && book.Authors.Any())

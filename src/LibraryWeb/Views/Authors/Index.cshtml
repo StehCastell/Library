@@ -135,6 +135,26 @@
                         <textarea id="authorBio" name="authorBio" rows="4"
                                   placeholder="Brief biography of the author..."></textarea>
                     </div>
+                    <div class="form-group-full" style="grid-column: 1 / -1;">
+                        <label for="authorProfileImage">
+                            <i class="fas fa-image"></i> Profile Image (Optional)
+                        </label>
+                        <div class="image-upload-container">
+                            <input type="file" id="authorProfileImage" accept="image/*"
+                                   onchange="handleAuthorImageSelect(event)" class="file-input">
+                            <div id="authorImagePreviewContainer" style="display: none;">
+                                <img id="authorImagePreview" class="image-preview">
+                                <button type="button" class="btn-remove-image" onclick="removeAuthorImage()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="authorImageUploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <small>PNG, JPG, JPEG (max 5MB)</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-actions">

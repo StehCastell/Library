@@ -12,5 +12,7 @@ namespace LibraryAPI.DTOs
         public string? Nationality { get; set; }
 
         public string? Bio { get; set; }
+
+        public string? ProfileImage { get; set; }
     }
 }

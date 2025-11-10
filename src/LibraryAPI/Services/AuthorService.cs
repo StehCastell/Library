@@ -20,6 +20,7 @@ namespace LibraryAPI.Services
                 Name = authorDto.Name,
                 Nationality = authorDto.Nationality,
                 Bio = authorDto.Bio,
+                ProfileImage = authorDto.ProfileImage,
                 CreatedAt = DateTime.Now
             };
 
@@ -40,6 +41,7 @@ namespace LibraryAPI.Services
             author.Name = authorDto.Name;
             author.Nationality = authorDto.Nationality;
             author.Bio = authorDto.Bio;
+            author.ProfileImage = authorDto.ProfileImage;
 
             var updatedAuthor = await _authorRepository.UpdateAsync(author);
 
@@ -85,6 +87,7 @@ namespace LibraryAPI.Services
                 Name = author.Name,
                 Nationality = author.Nationality,
                 Bio = author.Bio,
+                ProfileImage = author.ProfileImage,
                 CreatedAt = author.CreatedAt,
                 BookCount = author.BookAuthors?.Count ?? 0
             };

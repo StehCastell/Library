@@ -26,6 +26,7 @@ namespace LibraryAPI.Services
                 Pages = bookDto.Pages,
                 Type = bookDto.Type,
                 Status = bookDto.Status,
+                CoverImage = bookDto.CoverImage,
                 CreatedAt = DateTime.Now
             };
 
@@ -49,6 +50,7 @@ namespace LibraryAPI.Services
             book.Pages = bookDto.Pages;
             book.Type = bookDto.Type;
             book.Status = bookDto.Status;
+            book.CoverImage = bookDto.CoverImage;
 
             var bookAtualizado = await _bookRepository.UpdateAsync(book);
 
@@ -142,6 +144,7 @@ namespace LibraryAPI.Services
                 Pages = book.Pages,
                 Type = book.Type,
                 Status = book.Status,
+                CoverImage = book.CoverImage,
                 CreatedAt = book.CreatedAt
             };
         }
