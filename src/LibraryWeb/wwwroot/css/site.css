@@ -1807,8 +1807,8 @@ body.dark-theme .select2-container--default .select2-selection--multiple .select
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     margin-left: 8px;
     padding: 0;
     background-color: var(--primary-color);
@@ -1816,18 +1816,36 @@ body.dark-theme .select2-container--default .select2-selection--multiple .select
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 16px;
     transition: all 0.3s ease;
     vertical-align: middle;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    line-height: 1;
 }
 
 .btn-add-inline:hover {
     background-color: var(--primary-dark);
-    transform: scale(1.1);
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.btn-add-inline:active {
+    transform: scale(1.05);
 }
 
 .btn-add-inline i {
-    font-size: 10px;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.btn-add-inline .plus-icon {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    display: block;
+    font-family: Arial, sans-serif;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Book badges styling */
@@ -1995,6 +2013,171 @@ body.dark-theme .image-preview-container {
     background: var(--background-secondary);
 }
 
+/* ===== ENHANCED IMAGE UPLOAD FIELD ===== */
+.image-upload-area {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    border-radius: var(--border-radius);
+}
+
+.image-upload-area .file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.upload-placeholder-enhanced {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 250px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--background-secondary);
+    transition: all 0.3s ease;
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.upload-placeholder-enhanced:hover {
+    border-color: var(--primary-color);
+    background: var(--background-hover);
+    transform: translateY(-2px);
+}
+
+.upload-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.upload-icon-wrapper i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.upload-text {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.upload-hint {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.image-preview-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.image-preview-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+}
+
+.image-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-remove-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-remove-preview:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.btn-remove-preview i {
+    font-size: 1rem;
+}
+
+/* Dark theme adjustments for enhanced upload */
+body.dark-theme .upload-placeholder-enhanced {
+    border-color: var(--border-color);
+    background: var(--background-secondary);
+}
+
+body.dark-theme .upload-placeholder-enhanced:hover {
+    border-color: var(--primary-color);
+    background: var(--background-hover);
+}
+
+body.dark-theme .upload-icon-wrapper {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+body.dark-theme .image-preview-circle {
+    background: var(--background-secondary);
+}
+
+/* Book cover preview (rectangular for book covers) */
+.book-cover-preview {
+    width: 200px;
+    height: 280px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+}
+
+.book-cover-preview .image-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body.dark-theme .book-cover-preview {
+    background: var(--background-secondary);
+}
+
 /* ===== BOOK COVER DISPLAY IN TABLE ===== */
 .book-cover-cell {
     width: 60px;
@@ -2060,4 +2243,180 @@ body.dark-theme .book-cover-placeholder {
 body.dark-theme .author-profile-placeholder {
     background: var(--background-secondary);
     border-color: var(--border-color);
+}
+
+/* ===== Collection Profile Images ===== */
+.collection-profile-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.collection-profile-image .author-profile-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border: 3px solid var(--border-color);
+    transition: transform 0.2s ease;
+}
+
+.collection-profile-image .author-profile-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.collection-profile-image .author-profile-placeholder {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+    border: 2px solid var(--border-color);
+}
+
+body.dark-theme .collection-profile-image .author-profile-thumbnail {
+    border-color: var(--border-color);
+}
+
+/* ===== SORTABLE BOOKS LIST ===== */
+.reorder-header {
+    margin-bottom: 1rem;
+}
+
+.reorder-header label {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.hint-text {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+    margin-top: 0.25rem;
+}
+
+.sortable-books-list {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    background: var(--background-secondary);
+    min-height: 100px;
+}
+
+.sortable-book-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--background-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.sortable-book-item:hover {
+    background: var(--background-hover);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sortable-book-item.sortable-ghost {
+    opacity: 0.4;
+    background: var(--primary-color);
+}
+
+.sortable-book-item.sortable-chosen {
+    cursor: grabbing;
+}
+
+.book-order-number {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.book-drag-handle {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: grab;
+    flex-shrink: 0;
+}
+
+.book-drag-handle:active {
+    cursor: grabbing;
+}
+
+.book-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.book-info .book-title-sort {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-info .book-author-sort {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.book-status-badge.to-read {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.book-status-badge.reading {
+    background: rgba(0, 123, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.book-status-badge.read {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+body.dark-theme .sortable-books-list {
+    background: var(--background-secondary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .sortable-book-item {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+}
+
+body.dark-theme .sortable-book-item:hover {
+    background: var(--background-hover);
 }

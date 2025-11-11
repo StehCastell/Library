@@ -6,6 +6,7 @@ namespace LibraryAPI.DTOs
         public int UserId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
+        public string? ProfileImage { get; set; }
         public DateTime CreatedAt { get; set; }
         public int BookCount { get; set; } // Number of books in this collection
         public List<CollectionBookDto>? Books { get; set; } // Books in this collection

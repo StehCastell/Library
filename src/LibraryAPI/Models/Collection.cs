@@ -22,6 +22,9 @@ namespace LibraryAPI.Models
         [Column("description", TypeName = "TEXT")]
         public string? Description { get; set; }
 
+        [Column("profile_image", TypeName = "LONGTEXT")]
+        public string? ProfileImage { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

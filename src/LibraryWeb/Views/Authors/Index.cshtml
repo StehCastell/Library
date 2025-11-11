@@ -139,19 +139,23 @@
                         <label for="authorProfileImage">
                             <i class="fas fa-image"></i> Profile Image (Optional)
                         </label>
-                        <div class="image-upload-container">
+                        <div class="image-upload-area">
                             <input type="file" id="authorProfileImage" accept="image/*"
                                    onchange="handleAuthorImageSelect(event)" class="file-input">
-                            <div id="authorImagePreviewContainer" style="display: none;">
-                                <img id="authorImagePreview" class="image-preview">
-                                <button type="button" class="btn-remove-image" onclick="removeAuthorImage()">
-                                    <i class="fas fa-times"></i>
+                            <div id="authorImagePreviewContainer" class="image-preview-wrapper" style="display: none;">
+                                <div class="image-preview-circle">
+                                    <img id="authorImagePreview" class="image-preview-img">
+                                </div>
+                                <button type="button" class="btn-remove-preview" onclick="removeAuthorImage()">
+                                    <i class="fas fa-times-circle"></i> Remove Image
                                 </button>
                             </div>
-                            <div id="authorImageUploadPlaceholder">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Click to upload or drag and drop</p>
-                                <small>PNG, JPG, JPEG (max 5MB)</small>
+                            <div id="authorImageUploadPlaceholder" class="upload-placeholder-enhanced">
+                                <div class="upload-icon-wrapper">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <p class="upload-text">Click to upload or drag and drop</p>
+                                <small class="upload-hint">PNG, JPG, JPEG (max 5MB)</small>
                             </div>
                         </div>
                     </div>

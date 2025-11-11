@@ -37,5 +37,6 @@ namespace LibraryWeb.Services
         Task<bool> RemoveBookFromCollectionAsync(int userId, int collectionId, int bookId);
         Task<bool> AddAuthorToCollectionAsync(int userId, int collectionId, int authorId);
         Task<bool> RemoveAuthorFromCollectionAsync(int userId, int collectionId, int authorId);
+        Task<bool> ReorderBooksInCollectionAsync(int userId, int collectionId, object reorderDto);
     }
 }

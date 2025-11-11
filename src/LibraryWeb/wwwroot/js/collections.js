@@ -70,7 +70,8 @@ function initializeCollectionForm() {
             const collectionId = document.getElementById('editCollectionId').value;
             const collectionData = {
                 name: document.getElementById('collectionName').value,
-                description: document.getElementById('collectionDescription').value || null
+                description: document.getElementById('collectionDescription').value || null,
+                profileImage: currentCollectionProfileImageBase64
             };
 
             if (collectionId) {
@@ -408,6 +409,9 @@ function resetCollectionForm() {
         // Clear Select2
         $('#collectionBooks').val(null).trigger('change');
         $('#collectionAuthors').val(null).trigger('change');
+
+        // Clear image
+        removeCollectionImage();
     }
 }
 
@@ -510,6 +514,24 @@ function displayCollections(collections) {
         const completedBooks = collection.books ? collection.books.filter(b => b.status === 'read').length : 0;
         const booksProgressText = totalBooks > 0 ? `${completedBooks}/${totalBooks} books read` : 'No books';
 
+        // Profile image HTML
+        let profileImageHtml = '';
+        if (collection.profileImage) {
+            profileImageHtml = `
+                <div class="collection-profile-image">
+                    <img src="${collection.profileImage}" alt="${collection.name}" class="author-profile-thumbnail">
+                </div>
+            `;
+        } else {
+            profileImageHtml = `
+                <div class="collection-profile-image">
+                    <div class="author-profile-placeholder">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                </div>
+            `;
+        }
+
         cardsHtml += `
             <div class="collection-card" data-id="${collection.id}">
                 <div class="collection-header">
@@ -523,6 +545,7 @@ function displayCollections(collections) {
                         </button>
                     </div>
                 </div>
+                ${profileImageHtml}
                 <p class="collection-description">${collection.description || 'No description'}</p>
                 ${authorsHtml}
                 <div class="collection-stats">
@@ -692,6 +715,22 @@ async function editCollection(id) {
             document.getElementById('collectionName').value = collection.name;
             document.getElementById('collectionDescription').value = collection.description || '';
 
+            // Load profile image if exists
+            if (collection.profileImage) {
+                currentCollectionProfileImageBase64 = collection.profileImage;
+                const preview = document.getElementById('collectionImagePreview');
+                const previewContainer = document.getElementById('collectionImagePreviewContainer');
+                const placeholder = document.getElementById('collectionImageUploadPlaceholder');
+
+                if (preview && previewContainer && placeholder) {
+                    preview.src = collection.profileImage;
+                    previewContainer.style.display = 'flex';
+                    placeholder.style.display = 'none';
+                }
+            } else {
+                removeCollectionImage();
+            }
+
             // Set selected books in Select2
             if (collection.books && collection.books.length > 0) {
                 const bookIds = collection.books.map(b => b.id);
@@ -703,6 +742,12 @@ async function editCollection(id) {
                 const authorIds = collection.authors.map(a => a.authorId);
                 $('#collectionAuthors').val(authorIds).trigger('change');
             }
+
+            // Set current collection ID for reordering
+            currentCollectionId = collection.id;
+
+            // Populate sortable books list
+            populateSortableBooks(collection.books);
 
             document.getElementById('collectionFormTitle').textContent = 'Edit Collection';
             const submitBtn = document.getElementById('btnSubmitCollection');
@@ -778,5 +823,176 @@ async function getErrorMessage(response) {
         return data.message || 'An error occurred';
     } catch {
         return 'An error occurred';
+    }
+}
+
+// ===== IMAGE HANDLING =====
+
+let currentCollectionProfileImageBase64 = null;
+
+function handleCollectionImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        showMessage('collectionMessage', 'Please select a valid image file (JPG, JPEG, or PNG)', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+        showMessage('collectionMessage', 'Image size must be less than 5MB', 'error');
+        event.target.value = '';
+        return;
+    }
+
+    // Read and convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64String = e.target.result;
+        currentCollectionProfileImageBase64 = base64String;
+
+        // Show preview
+        const preview = document.getElementById('collectionImagePreview');
+        const previewContainer = document.getElementById('collectionImagePreviewContainer');
+        const placeholder = document.getElementById('collectionImageUploadPlaceholder');
+
+        if (preview && previewContainer && placeholder) {
+            preview.src = base64String;
+            previewContainer.style.display = 'flex';
+            placeholder.style.display = 'none';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeCollectionImage() {
+    currentCollectionProfileImageBase64 = null;
+
+    const fileInput = document.getElementById('collectionProfileImage');
+    const preview = document.getElementById('collectionImagePreview');
+    const previewContainer = document.getElementById('collectionImagePreviewContainer');
+    const placeholder = document.getElementById('collectionImageUploadPlaceholder');
+
+    if (fileInput) fileInput.value = '';
+    if (preview) preview.src = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+}
+
+// ===== BOOK REORDERING =====
+
+let sortableInstance = null;
+let currentCollectionId = null;
+
+function initializeSortable() {
+    const sortableList = document.getElementById('sortableBooksList');
+    if (!sortableList) return;
+
+    // Destroy previous instance if exists
+    if (sortableInstance) {
+        sortableInstance.destroy();
+    }
+
+    // Create new Sortable instance
+    sortableInstance = Sortable.create(sortableList, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        handle: '.book-drag-handle',
+        onEnd: function (evt) {
+            // Update order numbers after drag
+            updateOrderNumbers();
+        }
+    });
+}
+
+function updateOrderNumbers() {
+    const items = document.querySelectorAll('.sortable-book-item');
+    items.forEach((item, index) => {
+        const orderNumberEl = item.querySelector('.book-order-number');
+        if (orderNumberEl) {
+            orderNumberEl.textContent = index + 1;
+        }
+        item.setAttribute('data-order', index);
+    });
+}
+
+function populateSortableBooks(books) {
+    const sortableList = document.getElementById('sortableBooksList');
+    const reorderSection = document.getElementById('reorderBooksSection');
+
+    if (!books || books.length === 0) {
+        if (reorderSection) reorderSection.style.display = 'none';
+        return;
+    }
+
+    if (reorderSection) reorderSection.style.display = 'block';
+
+    // Sort books by displayOrder
+    const sortedBooks = books.sort((a, b) => a.displayOrder - b.displayOrder);
+
+    let html = '';
+    sortedBooks.forEach((book, index) => {
+        const statusClass = book.status.toLowerCase().replace(' ', '-');
+        html += `
+            <div class="sortable-book-item" data-book-id="${book.bookId}" data-order="${index}">
+                <div class="book-order-number">${index + 1}</div>
+                <div class="book-drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="book-info">
+                    <p class="book-title-sort">${book.title}</p>
+                    <p class="book-author-sort">${book.author}</p>
+                </div>
+                <span class="book-status-badge ${statusClass}">${book.status}</span>
+            </div>
+        `;
+    });
+
+    sortableList.innerHTML = html;
+    initializeSortable();
+}
+
+async function saveBookOrder() {
+    if (!currentCollectionId) {
+        showMessage('collectionMessage', 'No collection selected', 'error');
+        return;
+    }
+
+    const items = document.querySelectorAll('.sortable-book-item');
+    const books = [];
+
+    items.forEach((item, index) => {
+        books.push({
+            bookId: parseInt(item.getAttribute('data-book-id')),
+            displayOrder: index
+        });
+    });
+
+    try {
+        const response = await fetch(`/collections/${currentCollectionId}/books/reorder`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ books: books })
+        });
+
+        if (response.ok) {
+            showMessage('collectionMessage', 'Reading order updated successfully!', 'success');
+            // Reload collections to reflect changes
+            await loadCollections();
+        } else {
+            const errorMsg = await getErrorMessage(response);
+            showMessage('collectionMessage', errorMsg, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving book order:', error);
+        showMessage('collectionMessage', 'Failed to save reading order', 'error');
     }
 }

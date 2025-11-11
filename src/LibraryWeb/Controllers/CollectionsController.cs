@@ -249,5 +249,25 @@ namespace LibraryWeb.Controllers
 
             return Ok(new { message = "Author removed from collection successfully" });
         }
+
+        // PUT: Collections/{collectionId}/books/reorder
+        [HttpPut("{collectionId}/books/reorder")]
+        public async Task<IActionResult> ReorderBooks(int collectionId, [FromBody] object reorderDto)
+        {
+            if (!IsLoggedIn())
+            {
+                return Unauthorized();
+            }
+
+            var userId = GetUserId();
+            var success = await _apiService.ReorderBooksInCollectionAsync(userId, collectionId, reorderDto);
+
+            if (!success)
+            {
+                return BadRequest(new { message = "Error reordering books" });
+            }
+
+            return NoContent();
+        }
     }
 }

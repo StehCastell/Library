@@ -14,5 +14,6 @@ namespace LibraryAPI.Repositories
         Task<bool> RemoveBookFromCollectionAsync(int collectionId, int bookId);
         Task<bool> AddAuthorToCollectionAsync(int collectionId, int authorId);
         Task<bool> RemoveAuthorFromCollectionAsync(int collectionId, int authorId);
+        Task<bool> ReorderBooksAsync(int collectionId, Dictionary<int, int> bookOrders);
     }
 }

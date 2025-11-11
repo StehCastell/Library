@@ -167,5 +167,22 @@ namespace LibraryAPI.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> ReorderBooksAsync(int collectionId, Dictionary<int, int> bookOrders)
+        {
+            foreach (var order in bookOrders)
+            {
+                var collectionBook = await _context.CollectionBooks
+                    .FirstOrDefaultAsync(cb => cb.CollectionId == collectionId && cb.BookId == order.Key);
+
+                if (collectionBook != null)
+                {
+                    collectionBook.DisplayOrder = order.Value;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

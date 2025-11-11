@@ -522,5 +522,36 @@ namespace LibraryWeb.Services
                 return false;
             }
         }
+
+        public async Task<bool> ReorderBooksInCollectionAsync(int userId, int collectionId, object reorderDto)
+        {
+            try
+            {
+                var url = $"{_baseUrl}/api/users/{userId}/collections/{collectionId}/books/reorder";
+                Console.WriteLine($"🌐 Calling API: PUT {url}");
+
+                var content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(reorderDto),
+                    System.Text.Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await _httpClient.PutAsync(url, content);
+                Console.WriteLine($"📡 API Response: {response.StatusCode}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"❌ API Error: {error}");
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception in ReorderBooksInCollectionAsync: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

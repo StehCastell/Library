@@ -1242,13 +1242,15 @@ function openAddAuthorModal() {
 function closeAddAuthorModalInBook() {
     document.getElementById('addAuthorModalInBook').style.display = 'none';
     document.getElementById('formAddAuthorInBook').reset();
+    removeModalAuthorImage();
 }
 
 async function handleAddAuthorFromModal() {
     const authorData = {
         name: document.getElementById('modalBookAuthorName').value,
         nationality: document.getElementById('modalBookAuthorNationality').value || null,
-        bio: document.getElementById('modalBookAuthorBio').value || null
+        bio: document.getElementById('modalBookAuthorBio').value || null,
+        profileImage: currentModalAuthorProfileImageBase64
     };
 
     try {
@@ -1345,4 +1347,61 @@ function clearBookForm() {
     $('#bookAuthors').val(null).trigger('change');
     document.getElementById('editBookId').value = '';
     removeImage();
+}
+
+// ===== MODAL AUTHOR IMAGE HANDLING =====
+let currentModalAuthorProfileImageBase64 = null;
+
+function handleModalAuthorImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPG, JPEG, or PNG)');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        alert('Image size must be less than 5MB');
+        event.target.value = '';
+        return;
+    }
+
+    // Read and convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64String = e.target.result;
+        currentModalAuthorProfileImageBase64 = base64String;
+
+        // Show preview
+        const preview = document.getElementById('modalAuthorImagePreview');
+        const previewContainer = document.getElementById('modalAuthorImagePreviewContainer');
+        const placeholder = document.getElementById('modalAuthorImageUploadPlaceholder');
+
+        if (preview && previewContainer && placeholder) {
+            preview.src = base64String;
+            previewContainer.style.display = 'flex';
+            placeholder.style.display = 'none';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeModalAuthorImage() {
+    currentModalAuthorProfileImageBase64 = null;
+
+    const fileInput = document.getElementById('modalBookAuthorProfileImage');
+    const preview = document.getElementById('modalAuthorImagePreview');
+    const previewContainer = document.getElementById('modalAuthorImagePreviewContainer');
+    const placeholder = document.getElementById('modalAuthorImageUploadPlaceholder');
+
+    if (fileInput) fileInput.value = '';
+    if (preview) preview.src = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
 }

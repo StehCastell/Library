@@ -162,5 +162,21 @@ namespace LibraryAPI.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Reorder books in a collection
+        /// </summary>
+        [HttpPut("{collectionId}/books/reorder")]
+        public async Task<ActionResult> ReorderBooks(int userId, int collectionId, [FromBody] ReorderBooksDto reorderDto)
+        {
+            var result = await _collectionService.ReorderBooksAsync(collectionId, userId, reorderDto);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Collection not found or unauthorized" });
+            }
+
+            return NoContent();
+        }
     }
 }

@@ -20,6 +20,7 @@ namespace LibraryAPI.Services
                 UserId = userId,
                 Name = collectionDto.Name,
                 Description = collectionDto.Description,
+                ProfileImage = collectionDto.ProfileImage,
                 CreatedAt = DateTime.Now
             };
 
@@ -39,6 +40,7 @@ namespace LibraryAPI.Services
 
             collection.Name = collectionDto.Name;
             collection.Description = collectionDto.Description;
+            collection.ProfileImage = collectionDto.ProfileImage;
 
             var updatedCollection = await _collectionRepository.UpdateAsync(collection);
 
@@ -142,6 +144,19 @@ namespace LibraryAPI.Services
             return await _collectionRepository.RemoveAuthorFromCollectionAsync(collectionId, authorId);
         }
 
+        public async Task<bool> ReorderBooksAsync(int collectionId, int userId, ReorderBooksDto reorderDto)
+        {
+            var collection = await _collectionRepository.GetByIdAsync(collectionId);
+
+            if (collection == null || collection.UserId != userId)
+            {
+                return false;
+            }
+
+            var bookOrders = reorderDto.Books.ToDictionary(b => b.BookId, b => b.DisplayOrder);
+            return await _collectionRepository.ReorderBooksAsync(collectionId, bookOrders);
+        }
+
         private CollectionResponseDto MapToResponseDto(Collection collection)
         {
             return new CollectionResponseDto
@@ -150,6 +165,7 @@ namespace LibraryAPI.Services
                 UserId = collection.UserId,
                 Name = collection.Name,
                 Description = collection.Description,
+                ProfileImage = collection.ProfileImage,
                 CreatedAt = collection.CreatedAt,
                 BookCount = collection.CollectionBooks?.Count ?? 0,
                 Books = collection.CollectionBooks?
