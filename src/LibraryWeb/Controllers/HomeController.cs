@@ -9,11 +9,11 @@ namespace LibraryWeb.Controllers
             // Redirecionar para login se não estiver logado
             if (HttpContext.Session.GetInt32("UserId") == null)
             {
-                return RedirectToAction("Login", "Account");
+                return LocalRedirect("/account/login");
             }
 
             // Se estiver logado, redirecionar para books
-            return RedirectToAction("Index", "Books");
+            return LocalRedirect("/books");
         }
     }
 }

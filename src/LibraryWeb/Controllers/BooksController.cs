@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("books")]
     public class BooksController : Controller
     {
         private readonly IApiService _apiService;
@@ -32,7 +32,7 @@ namespace LibraryWeb.Controllers
         {
             if (!IsLoggedIn())
             {
-                return RedirectToAction("Login", "Account");
+                return LocalRedirect("/account/login");
             }
 
             var userId = GetUserId();

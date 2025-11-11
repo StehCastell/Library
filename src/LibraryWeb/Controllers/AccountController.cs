@@ -20,7 +20,7 @@ namespace LibraryWeb.Controllers
             // Se já estiver logado, redireciona para books
             if (HttpContext.Session.GetInt32("UserId") != null)
             {
-                return RedirectToAction("Index", "Books");
+                return LocalRedirect("/books");
             }
 
             return View();
@@ -50,7 +50,7 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
 
-            return RedirectToAction("Index", "Books");
+            return LocalRedirect("/books");
         }
 
         // GET: Account/Register
@@ -60,7 +60,7 @@ namespace LibraryWeb.Controllers
             // Se já estiver logado, redireciona para books
             if (HttpContext.Session.GetInt32("UserId") != null)
             {
-                return RedirectToAction("Index", "Books");
+                return LocalRedirect("/books");
             }
 
             return View();
@@ -90,7 +90,7 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
 
-            return RedirectToAction("Index", "Books");
+            return LocalRedirect("/books");
         }
 
         // POST: Account/Logout
@@ -98,7 +98,7 @@ namespace LibraryWeb.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            return LocalRedirect("/account/login");
         }
     }
 }

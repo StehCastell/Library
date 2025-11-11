@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryWeb.Controllers
 {
-    [Route("[controller]")]
+    [Route("authors")]
     public class AuthorsController : Controller
     {
         private readonly IApiService _apiService;
@@ -31,7 +31,7 @@ namespace LibraryWeb.Controllers
         {
             if (!IsLoggedIn())
             {
-                return RedirectToAction("Login", "Account");
+                return LocalRedirect("/account/login");
             }
 
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
