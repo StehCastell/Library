@@ -53,8 +53,77 @@ namespace LibraryWeb.Controllers
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
             ViewBag.UserId = userId;
             ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
+            ViewBag.BookType = "all";
 
             return View(books);
+        }
+
+        // GET: Books/Physical
+        [HttpGet("Physical")]
+        public async Task<IActionResult> Physical()
+        {
+            if (!IsLoggedIn())
+            {
+                return LocalRedirect("/account/login");
+            }
+
+            var userId = GetUserId();
+            var books = await _apiService.GetBooksAsync(userId);
+
+            if (books == null)
+            {
+                books = new List<Book>();
+            }
+
+            // Filtrar apenas livros físicos
+            books = books.Where(b => b.Type == "Physical").ToList();
+
+            // Carregar autores para cada livro
+            foreach (var book in books)
+            {
+                book.Authors = await _apiService.GetBookAuthorsAsync(book.Id, userId);
+            }
+
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserId = userId;
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
+            ViewBag.BookType = "physical";
+
+            return View("Index", books);
+        }
+
+        // GET: Books/Digital
+        [HttpGet("Digital")]
+        public async Task<IActionResult> Digital()
+        {
+            if (!IsLoggedIn())
+            {
+                return LocalRedirect("/account/login");
+            }
+
+            var userId = GetUserId();
+            var books = await _apiService.GetBooksAsync(userId);
+
+            if (books == null)
+            {
+                books = new List<Book>();
+            }
+
+            // Filtrar apenas livros digitais
+            books = books.Where(b => b.Type == "Digital").ToList();
+
+            // Carregar autores para cada livro
+            foreach (var book in books)
+            {
+                book.Authors = await _apiService.GetBookAuthorsAsync(book.Id, userId);
+            }
+
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserId = userId;
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
+            ViewBag.BookType = "digital";
+
+            return View("Index", books);
         }
 
         // POST: Books/Create

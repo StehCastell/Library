@@ -133,10 +133,27 @@
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/books" class="nav-item" id="nav-books">
-                <i class="fas fa-book"></i>
-                <span>Books</span>
-            </a>
+            <div class="nav-item-with-submenu">
+                <a href="/books" class="nav-item" id="nav-books">
+                    <i class="fas fa-book"></i>
+                    <span>Books</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu">
+                    <a href="/books" class="submenu-item">
+                        <i class="fas fa-list"></i>
+                        <span>All Books</span>
+                    </a>
+                    <a href="/books/physical" class="submenu-item">
+                        <i class="fas fa-book"></i>
+                        <span>Physical Books</span>
+                    </a>
+                    <a href="/books/digital" class="submenu-item">
+                        <i class="fas fa-tablet-alt"></i>
+                        <span>Digital Books</span>
+                    </a>
+                </div>
+            </div>
             <a href="/authors" class="nav-item" id="nav-authors">
                 <i class="fas fa-user-edit"></i>
                 <span>Authors</span>
@@ -149,10 +166,19 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>Statistics</span>
             </a>
-            <a href="/books" class="nav-item" id="nav-settings">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </a>
+            <div class="nav-item-with-submenu">
+                <a href="#" class="nav-item" id="nav-settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                    <i class="fas fa-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="submenu">
+                    <a href="/profile" class="submenu-item">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+            </div>
         </nav>
 
         <div class="sidebar-footer">

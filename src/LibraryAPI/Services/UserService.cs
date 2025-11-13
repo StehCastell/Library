@@ -100,5 +100,57 @@ namespace LibraryAPI.Services
             await _userRepository.UpdateAsync(user);
             return true;
         }
+
+        public async Task<UserResponseDto?> UpdateProfileAsync(int userId, UserUpdateDto updateDto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Verificar se o email já existe para outro usuário
+            if (await _userRepository.EmailExistsForOtherUserAsync(updateDto.Email, userId))
+            {
+                return null;
+            }
+
+            user.Name = updateDto.Name;
+            user.Email = updateDto.Email.ToLower();
+
+            await _userRepository.UpdateAsync(user);
+
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                CreatedAt = user.CreatedAt,
+                Theme = user.Theme
+            };
+        }
+
+        public async Task<bool> UpdatePasswordAsync(int userId, UserPasswordUpdateDto passwordDto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Verificar se a senha atual está correta
+            if (!BCrypt.Net.BCrypt.Verify(passwordDto.CurrentPassword, user.Password))
+            {
+                return false;
+            }
+
+            // Atualizar para a nova senha
+            user.Password = BCrypt.Net.BCrypt.HashPassword(passwordDto.NewPassword);
+            await _userRepository.UpdateAsync(user);
+
+            return true;
+        }
     }
 }

@@ -2420,3 +2420,279 @@ body.dark-theme .sortable-book-item {
 body.dark-theme .sortable-book-item:hover {
     background: var(--background-hover);
 }
+
+/* ===== PROFILE PAGE STYLES ===== */
+.profile-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--content-bg);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-form .form-group {
+    margin-bottom: 24px;
+}
+
+.profile-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.profile-form .form-group label i {
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+.profile-form .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.profile-form .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(95, 99, 242, 0.1);
+}
+
+.profile-form .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.profile-form .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-form .btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.profile-form .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(95, 99, 242, 0.3);
+}
+
+.profile-form .btn-secondary {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.profile-form .btn-secondary:hover {
+    background: #7a80a0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(143, 149, 178, 0.3);
+}
+
+/* Alert Styles */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.alert i {
+    font-size: 20px;
+}
+
+.alert-success {
+    background: rgba(0, 201, 167, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(0, 201, 167, 0.3);
+}
+
+.alert-success i {
+    color: var(--success-color);
+}
+
+.alert-error {
+    background: rgba(255, 107, 114, 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(255, 107, 114, 0.3);
+}
+
+.alert-error i {
+    color: var(--danger-color);
+}
+
+/* Dark theme for profile page */
+body.dark-theme .profile-form-container {
+    background: var(--content-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .profile-form .form-control {
+    background: var(--bg-color);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .profile-form .form-control:focus {
+    border-color: var(--primary-color);
+}
+
+body.dark-theme .alert-success {
+    background: rgba(0, 201, 167, 0.15);
+    border-color: rgba(0, 201, 167, 0.4);
+}
+
+body.dark-theme .alert-error {
+    background: rgba(255, 107, 114, 0.15);
+    border-color: rgba(255, 107, 114, 0.4);
+}
+
+/* Modal Close Button */
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close-modal:hover {
+    color: var(--danger-color);
+    background: rgba(255, 107, 114, 0.1);
+    transform: rotate(90deg);
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Modern Form in Modal */
+.modern-form {
+    padding: 0;
+}
+
+.modern-form .form-group {
+    margin-bottom: 20px;
+}
+
+.modern-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.modern-form .form-group label i {
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+.modern-form .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.modern-form .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(95, 99, 242, 0.1);
+}
+
+.modern-form .text-muted {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 4px;
+}
+
+/* Dark theme adjustments for modal */
+body.dark-theme .close-modal {
+    color: var(--text-secondary);
+}
+
+body.dark-theme .close-modal:hover {
+    color: var(--danger-color);
+    background: rgba(255, 107, 114, 0.15);
+}
+
+body.dark-theme .modal-actions {
+    border-top-color: var(--border-color);
+}
+
+body.dark-theme .modern-form .form-control {
+    background: var(--bg-color);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-theme .modern-form .form-control:focus {
+    border-color: var(--primary-color);
+}

@@ -30,6 +30,12 @@ namespace LibraryAPI.Repositories
                 .AnyAsync(u => u.Email.ToLower() == email.ToLower());
         }
 
+        public async Task<bool> EmailExistsForOtherUserAsync(string email, int userId)
+        {
+            return await _context.Users
+                .AnyAsync(u => u.Email.ToLower() == email.ToLower() && u.Id != userId);
+        }
+
         public async Task<User> CreateAsync(User user)
         {
             _context.Users.Add(user);

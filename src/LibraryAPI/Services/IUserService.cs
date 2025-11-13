@@ -8,5 +8,7 @@ namespace LibraryAPI.Services
         Task<UserResponseDto?> LoginAsync(UserLoginDto loginDto);
         Task<UserResponseDto?> GetByIdAsync(int id);
         Task<bool> UpdateThemeAsync(int userId, string theme);
+        Task<UserResponseDto?> UpdateProfileAsync(int userId, UserUpdateDto updateDto);
+        Task<bool> UpdatePasswordAsync(int userId, UserPasswordUpdateDto passwordDto);
     }
 }

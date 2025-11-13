@@ -9,6 +9,8 @@ namespace LibraryWeb.Services
         Task<User?> LoginAsync(LoginViewModel model);
         Task<User?> GetUserByIdAsync(int id);
         Task<bool> UpdateUserThemeAsync(int userId, string theme);
+        Task<User?> UpdateUserProfileAsync(int userId, ProfileViewModel model);
+        Task<bool> UpdateUserPasswordAsync(int userId, PasswordViewModel model);
 
         // Books
         Task<List<Book>> GetBooksAsync(int userId);

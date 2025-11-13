@@ -100,6 +100,46 @@ namespace LibraryWeb.Services
             }
         }
 
+        public async Task<User?> UpdateUserProfileAsync(int userId, ProfileViewModel model)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(model);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/profile", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<User>(responseContent);
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateUserPasswordAsync(int userId, PasswordViewModel model)
+        {
+            try
+            {
+                var json = JsonConvert.SerializeObject(model);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"{_baseUrl}/api/users/{userId}/password", content);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // ========== BOOKS ==========
 
         public async Task<List<Book>> GetBooksAsync(int userId)

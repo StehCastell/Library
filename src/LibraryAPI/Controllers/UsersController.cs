@@ -93,5 +93,47 @@ namespace LibraryAPI.Controllers
 
             return Ok(new { message = "Theme updated successfully" });
         }
+
+        /// <summary>
+        /// Update user profile (name and email)
+        /// </summary>
+        [HttpPut("{id}/profile")]
+        public async Task<ActionResult<UserResponseDto>> UpdateProfile(int id, [FromBody] UserUpdateDto updateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userService.UpdateProfileAsync(id, updateDto);
+
+            if (user == null)
+            {
+                return BadRequest(new { message = "Usuário não encontrado ou email já está em uso" });
+            }
+
+            return Ok(user);
+        }
+
+        /// <summary>
+        /// Update user password
+        /// </summary>
+        [HttpPut("{id}/password")]
+        public async Task<ActionResult> UpdatePassword(int id, [FromBody] UserPasswordUpdateDto passwordDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var success = await _userService.UpdatePasswordAsync(id, passwordDto);
+
+            if (!success)
+            {
+                return BadRequest(new { message = "Senha atual incorreta ou usuário não encontrado" });
+            }
+
+            return Ok(new { message = "Senha atualizada com sucesso" });
+        }
     }
 }
