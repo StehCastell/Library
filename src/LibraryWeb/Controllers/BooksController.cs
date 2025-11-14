@@ -76,7 +76,7 @@ namespace LibraryWeb.Controllers
             }
 
             // Filtrar apenas livros físicos
-            books = books.Where(b => b.Type == "Physical").ToList();
+            books = books.Where(b => b.Type != null && b.Type.Equals("Physical", StringComparison.OrdinalIgnoreCase)).ToList();
 
             // Carregar autores para cada livro
             foreach (var book in books)
@@ -110,7 +110,7 @@ namespace LibraryWeb.Controllers
             }
 
             // Filtrar apenas livros digitais
-            books = books.Where(b => b.Type == "Digital").ToList();
+            books = books.Where(b => b.Type != null && b.Type.Equals("Digital", StringComparison.OrdinalIgnoreCase)).ToList();
 
             // Carregar autores para cada livro
             foreach (var book in books)

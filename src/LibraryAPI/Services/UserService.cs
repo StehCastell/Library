@@ -39,7 +39,8 @@ namespace LibraryAPI.Services
                 Name = userCriado.Name,
                 Email = userCriado.Email,
                 CreatedAt = userCriado.CreatedAt,
-                Theme = userCriado.Theme
+                Theme = userCriado.Theme,
+                ProfileImage = userCriado.ProfileImage
             };
         }
 
@@ -64,7 +65,8 @@ namespace LibraryAPI.Services
                 Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                Theme = user.Theme
+                Theme = user.Theme,
+                ProfileImage = user.ProfileImage
             };
         }
 
@@ -83,7 +85,8 @@ namespace LibraryAPI.Services
                 Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                Theme = user.Theme
+                Theme = user.Theme,
+                ProfileImage = user.ProfileImage
             };
         }
 
@@ -119,6 +122,11 @@ namespace LibraryAPI.Services
             user.Name = updateDto.Name;
             user.Email = updateDto.Email.ToLower();
 
+            if (!string.IsNullOrEmpty(updateDto.ProfileImage))
+            {
+                user.ProfileImage = updateDto.ProfileImage;
+            }
+
             await _userRepository.UpdateAsync(user);
 
             return new UserResponseDto
@@ -127,7 +135,8 @@ namespace LibraryAPI.Services
                 Name = user.Name,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
-                Theme = user.Theme
+                Theme = user.Theme,
+                ProfileImage = user.ProfileImage
             };
         }
 

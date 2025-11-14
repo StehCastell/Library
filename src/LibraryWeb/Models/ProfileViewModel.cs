@@ -11,5 +11,7 @@ namespace LibraryWeb.Models
         [Required(ErrorMessage = "O email é obrigatório")]
         [EmailAddress(ErrorMessage = "Email inválido")]
         public string Email { get; set; } = string.Empty;
+
+        public string? ProfileImage { get; set; }
     }
 }

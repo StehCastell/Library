@@ -90,7 +90,17 @@
         <div class="sidebar-footer">
             <div class="user-info">
                 <div class="user-avatar">
-                    <i class="fas fa-user"></i>
+                    @{
+                        var userProfileImage = Context.Session.GetString("UserProfileImage");
+                    }
+                    @if (!string.IsNullOrEmpty(userProfileImage))
+                    {
+                        <img src="@userProfileImage" alt="Profile" class="avatar-img" />
+                    }
+                    else
+                    {
+                        <i class="fas fa-user"></i>
+                    }
                 </div>
                 <div class="user-details">
                     <div class="user-name">@ViewBag.UserName</div>

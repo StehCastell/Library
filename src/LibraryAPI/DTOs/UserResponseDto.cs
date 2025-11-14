@@ -7,5 +7,6 @@ namespace LibraryAPI.DTOs
         public string Email { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public string Theme { get; set; } = "light";
+        public string? ProfileImage { get; set; }
     }
 }

@@ -50,6 +50,11 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
 
+            if (!string.IsNullOrEmpty(user.ProfileImage))
+            {
+                HttpContext.Session.SetString("UserProfileImage", user.ProfileImage);
+            }
+
             return LocalRedirect("/books");
         }
 
@@ -89,6 +94,11 @@ namespace LibraryWeb.Controllers
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserTheme", user.Theme ?? "light");
+
+            if (!string.IsNullOrEmpty(user.ProfileImage))
+            {
+                HttpContext.Session.SetString("UserProfileImage", user.ProfileImage);
+            }
 
             return LocalRedirect("/books");
         }

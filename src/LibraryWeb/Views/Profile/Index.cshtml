@@ -93,7 +93,14 @@
         <div class="sidebar-footer">
             <div class="user-profile">
                 <div class="user-avatar">
-                    <i class="fas fa-user"></i>
+                    @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                    {
+                        <img src="@Model.ProfileImage" alt="Profile" class="avatar-img" />
+                    }
+                    else
+                    {
+                        <i class="fas fa-user"></i>
+                    }
                 </div>
                 <div class="user-details">
                     <p class="user-name">@ViewBag.UserName</p>
@@ -141,8 +148,48 @@
             }
 
             <div class="profile-form-container">
-                <form asp-controller="Profile" asp-action="UpdateProfile" method="post" class="profile-form">
+                <form asp-controller="Profile" asp-action="UpdateProfile" method="post" class="profile-form" id="profileForm">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ProfileImage" id="profileImageInput" />
+
+                    <div class="form-group profile-image-section">
+                        <label>
+                            <i class="fas fa-camera"></i> Profile Picture
+                        </label>
+                        <div class="profile-image-upload">
+                            <div class="profile-image-preview">
+                                @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                                {
+                                    <img src="@Model.ProfileImage" alt="Profile" id="profilePreview" class="profile-img" />
+                                }
+                                else
+                                {
+                                    <div class="profile-placeholder" id="profilePlaceholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <img src="" alt="Profile" id="profilePreview" class="profile-img" style="display: none;" />
+                                }
+                            </div>
+                            <div class="profile-image-actions">
+                                <input type="file" id="profileImageFile" accept="image/*" style="display: none;" onchange="handleProfileImageSelect(event)" />
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('profileImageFile').click()">
+                                    <i class="fas fa-upload"></i> Upload Photo
+                                </button>
+                                @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                                {
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="removeProfileImage()">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-danger btn-sm" id="removeProfileBtn" onclick="removeProfileImage()" style="display: none;">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="form-group">
                         <label asp-for="Name">
@@ -300,6 +347,67 @@
             const errorMessage = document.getElementById('passwordErrorMessage');
             errorMessage.textContent = message;
             errorDiv.style.display = 'flex';
+        }
+
+        // Profile image handling
+        function handleProfileImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image size must be less than 5MB');
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Image = e.target.result;
+                    document.getElementById('profileImageInput').value = base64Image;
+                    document.getElementById('profilePreview').src = base64Image;
+                    document.getElementById('profilePreview').style.display = 'block';
+                    const placeholder = document.getElementById('profilePlaceholder');
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    document.getElementById('removeProfileBtn').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeProfileImage() {
+            document.getElementById('profileImageInput').value = '';
+            document.getElementById('profilePreview').src = '';
+            document.getElementById('profilePreview').style.display = 'none';
+            const placeholder = document.getElementById('profilePlaceholder');
+            if (placeholder) {
+                placeholder.style.display = 'flex';
+            }
+            document.getElementById('removeProfileBtn').style.display = 'none';
+            document.getElementById('profileImageFile').value = '';
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            const theme = isDark ? 'dark' : 'light';
+            localStorage.setItem('theme', theme);
+
+            // Update theme on server
+            fetch('/books/UpdateTheme', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ theme: theme })
+            });
         }
     </script>
 </body>

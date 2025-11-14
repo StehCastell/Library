@@ -13,7 +13,7 @@ namespace LibraryWeb.Controllers
             _apiService = apiService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             var userName = HttpContext.Session.GetString("UserName");
@@ -24,13 +24,18 @@ namespace LibraryWeb.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            // Buscar dados atualizados do usuário da API
+            var user = await _apiService.GetUserByIdAsync(userId.Value);
+
             var model = new ProfileViewModel
             {
                 Name = userName,
-                Email = userEmail
+                Email = userEmail,
+                ProfileImage = user?.ProfileImage
             };
 
             ViewBag.UserId = userId.Value;
+            ViewBag.UserTheme = HttpContext.Session.GetString("UserTheme") ?? "light";
 
             return View(model);
         }
@@ -63,6 +68,11 @@ namespace LibraryWeb.Controllers
             // Atualizar sessão com novos dados
             HttpContext.Session.SetString("UserName", updatedUser.Name);
             HttpContext.Session.SetString("UserEmail", updatedUser.Email);
+
+            if (!string.IsNullOrEmpty(updatedUser.ProfileImage))
+            {
+                HttpContext.Session.SetString("UserProfileImage", updatedUser.ProfileImage);
+            }
 
             TempData["SuccessMessage"] = "Perfil atualizado com sucesso!";
             return RedirectToAction("Index");

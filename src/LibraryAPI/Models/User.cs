@@ -32,6 +32,9 @@ namespace LibraryAPI.Models
         [Column("theme")]
         public string Theme { get; set; } = "light";
 
+        [Column("profile_image")]
+        public string? ProfileImage { get; set; }
+
         // Relationship with Books
         public virtual ICollection<Book> Books { get; set; } = new List<Book>();
     }
